@@ -16,7 +16,7 @@ A powerful, dynamic graph-based workflow engine and visual designer for Laravel.
 Install the package via composer:
 
 ```bash
-composer require workflow/laravel-dynamic-workflow
+composer require nganthoiba/laravel-dynamic-workflow
 ```
 
 Publish the configuration, assets, and views:
