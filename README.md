@@ -1,31 +1,238 @@
 # Laravel Dynamic Workflow
 
-A powerful, dynamic graph-based workflow engine and visual designer for Laravel. This package allows you to define complex business processes using a visual interface and execute them with a robust, event-driven engine.
+A powerful, dynamic graph-based workflow engine and visual designer for Laravel.
+
+This package allows you to define complex business processes visually and execute them using a robust runtime workflow engine with support for dynamic routing, conditional branching, runtime task management, role-based authorization, and workflow history tracking.
+
+Unlike traditional hardcoded approval systems, this package enables workflows to evolve dynamically over time without modifying application source code.
 
 ## Features
 
-- **Visual Workflow Designer**: Integrated drag-and-drop designer powered by LogicFlow.
-- **Dynamic Graph Engine**: Support for branching, conditions, and custom node handlers.
-- **Customizable Actions (Hooks)**: Define business logic as `StepAction` classes that trigger during transitions.
-- **Role-Based Routing**: Assign workflow steps to specific user roles.
-- **Condition Support**: Dynamic branching based on data-driven conditions.
-- **Vendor Agnostic**: easily integrates with your existing User and Role models.
+- Visual Workflow Designer powered by LogicFlow
+- Dynamic Graph-Based Workflow Engine
+- Conditional Workflow Routing
+- Nested Conditional Branching
+- Runtime Task Inbox
+- Role-Based Workflow Execution
+- Workflow History and Audit Tracking
+- Workflow Cancellation Support
+- Configurable Workflow Actions
+- Reusable StepAction Hooks
+- Dynamic Step Addition/Removal
+- Enterprise Workflow Architecture
+- Vendor Agnostic User/Role Integration
+- Composer Installable Laravel Package
+
+## Why Dynamic Workflows Matter
+
+In real-world enterprise systems, workflows are rarely fixed permanently.
+
+Business rules continuously evolve over time.
+
+For example, a Purchase Order approval process may initially follow this flow:
+
+Employee
+↓
+Assistant Manager
+↓
+Sales Director
+↓
+Admin Approval
+
+However, organizational policies frequently change.
+
+At any point in time:
+
+- a new approval authority may be added
+- an existing authority may be removed
+- approval chains may become shorter or longer
+- conditional routing rules may change
+- different departments may follow different workflows
+- workflows may vary based on amount, region, category, or risk level
+
+Example:
+**If amount > 5,00,000**
+→ Finance Director Approval Required
+
+**Else**
+→ Skip Finance Director
+
+Or:
+**If region = HQ**
+→ Route to Central Admin
+
+**Else**
+→ Route to Regional Office
+
+Traditional hardcoded approval systems become difficult to maintain in such scenarios because every workflow change requires:
+
+- modifying source code
+- redeploying the application
+- database changes
+- developer intervention
+
+This package solves that problem by providing a fully dynamic graph-based workflow engine.
+
+## Dynamic Workflow Modification
+
+One of the core strengths of this package is that workflows can be modified dynamically without changing application source code.
+
+Administrators can:
+
+- add new workflow steps
+- remove existing workflow steps
+- insert intermediate approvals
+- modify routing conditions
+- redesign the workflow graph visually
+- change role assignments
+- alter conditional branching
+- redesign approval hierarchies
+
+All of these changes can be performed visually using the Workflow Designer.
+
+Example:
+A workflow can evolve from:
+Employee → Manager → Admin
+
+to:
+Employee → Assistant Manager → Manager → Finance Director → Admin
+
+without modifying the core business application.
+
+## Conditional Workflow Intelligence
+
+The workflow engine supports intelligent runtime routing using condition nodes.
+
+Condition nodes dynamically determine the next workflow path based on runtime data.
+
+Examples:
+
+- purchase amount
+- department
+- region
+- user role
+- submission type
+- risk category
+- approval priority
+- custom business fields
+
+This allows highly flexible workflow automation.
+
+Example:
+**If amount > 100000**
+→ Route to Director
+
+**Else**
+→ Route directly to Admin
+
+Nested conditional workflows are also supported (e.g., Amount > 100000 → Region = HQ → Risk Level = HIGH), allowing enterprise-grade decision trees.
+
+## Designed for Enterprise Adaptability
+
+This package is specifically designed for environments where workflow structures are not permanently fixed.
+
+Suitable industries include:
+
+- Government systems
+- Excise and permit systems
+- ERP systems
+- Banking systems
+- Manufacturing systems
+- Universities and institutions
+- Warehouse management
+- Dispatch systems
+- HR approval systems
+- Procurement systems
+- Compliance systems
+
+The engine enables organizations to continuously evolve business processes without rewriting application logic.
+
+## Separation of Workflow and Business Logic
+
+The package separates:
+
+- workflow definition
+- workflow routing
+- runtime task execution
+- business actions
+- approval hierarchy
+- UI rendering
+
+This separation makes large systems significantly easier to maintain and extend. Business applications only define workflow actions, forms/views, and business operations, while the workflow engine dynamically controls routing, authorization, transitions, task assignment, and conditional branching.
+
+## Runtime Workflow Flexibility
+
+The workflow runtime engine supports:
+
+- active workflow instances
+- pending task inboxes
+- workflow cancellation
+- workflow history tracking
+- audit trails
+- runtime role authorization
+- task reassignment possibilities
+- conditional execution paths
+
+This allows the package to function as both a workflow engine and a business process management (BPM) system.
+
+## Visual Workflow Evolution
+
+The built-in visual designer allows administrators to continuously evolve workflows as organizational requirements change. Instead of hardcoding approval chains, workflows become configurable operational assets.
+
+This dramatically reduces maintenance overhead, release cycles, developer dependency, and operational rigidity, while improving flexibility, scalability, transparency, and auditability.
+
+## Workflow Architecture
+
+The package uses a graph-based runtime architecture.
+
+### Supported node types:
+
+- **Start Node**: Exactly one outgoing edge.
+- **Step Node**: Exactly one outgoing edge. Represents an executable business task.
+- **Condition Node**: Exactly two outgoing edges (TRUE and FALSE branch). May point to another condition node or a step node.
+- **End Node**: No outgoing edges.
+
+## Workflow Runtime Design
+
+The package separates workflow runtime into two major concepts:
+
+### 1. Current Workflow State (`workflow_instances`)
+
+Tracks the current active step, status, runtime state, and completion/cancellation.
+**Important**: `workflow_instances.current_step_id` represents the **CURRENT ACTIVE PENDING STEP**, not the last completed step.
+
+### 2. Workflow Execution History (`workflow_instance_steps`)
+
+Tracks executed tasks, active tasks, comments, timestamps, audit trails, and user actions.
+**Important**: A workflow task is considered **OPEN** if `completed_at IS NULL`, and **COMPLETED** if `completed_at IS NOT NULL`.
+
+## Visual Workflow Designer
+
+The package includes an interactive drag-and-drop workflow designer powered by LogicFlow.
+
+- draggable nodes
+- resizable nodes
+- directional workflow arrows
+- nested conditional trees
+- multiple graph directions
+- runtime graph persistence
+- visual workflow editing
 
 ## Installation
 
-Install the package via composer:
+Install the package via Composer:
 
 ```bash
 composer require nganthoiba/laravel-dynamic-workflow
 ```
 
-Publish the configuration, assets, and views:
+### Publish Package Resources
 
 ```bash
 php artisan vendor:publish --provider="Workflow\Providers\WorkflowServiceProvider"
 ```
 
-Run the migrations:
+### Run Migrations
 
 ```bash
 php artisan migrate
@@ -33,7 +240,7 @@ php artisan migrate
 
 ## Configuration
 
-Update `config/workflow.php` to map your application's identity models:
+Update `config/workflow.php`:
 
 ```php
 'models' => [
@@ -42,13 +249,13 @@ Update `config/workflow.php` to map your application's identity models:
 ],
 ```
 
-## Usage Guide
+## Workflow Actions (Hooks)
 
-### 1. Defining Workflow Actions (Hooks)
+Workflow actions define the executable business behavior of workflow steps. Each executable step references a `workflow_action` which determines the Blade view, Action class, and runtime behavior.
 
-Hooks in this package are implemented as `StepAction` classes. These classes contain the business logic that should execute when a workflow reaches or leaves a specific step.
+### Creating Workflow Actions
 
-Create a class that implements `Workflow\Core\Contracts\StepActionInterface`:
+Create a class implementing `Workflow\Core\Contracts\StepActionInterface`.
 
 ```php
 namespace App\Workflow\Actions;
@@ -66,44 +273,44 @@ class ApproveOrderAction implements StepActionInterface
         ])->validate();
     }
 
-    public function execute(array $data, Model $model, WorkflowInstanceStep $workflowInstanceStep): void
-    {
-        // $model is your business model (e.g., Order)
-        $model->update(['status' => 'approved']);
-        
-        // Log the action or send notifications
-        logger()->info("Order {$model->id} approved by user.");
+    public function execute(
+        array $data,
+        Model $model,
+        WorkflowInstanceStep $workflowInstanceStep
+    ): void {
+        $model->update([
+            'status' => 'approved'
+        ]);
+
+        logger()->info("Order {$model->id} approved.");
     }
 }
 ```
 
-### 2. Registering Actions
+### Registering Workflow Actions
 
-Register your actions in `config/workflow.php` so they appear in the Designer:
+Register actions inside `config/workflow.php`:
 
 ```php
 'workflow_actions' => [
     'approve_order' => [
         'label' => 'Approve Order',
-        'view'  => 'approve_order_view', // Blade view for the task UI
+        'view'  => 'approve_order_view',
         'action' => \App\Workflow\Actions\ApproveOrderAction::class,
     ],
 ],
 ```
 
-### 3. Visual Designing
+## Visual Workflow Designing
 
-1. Access the designer at `/workflow/processes`.
-2. Create a new process.
-3. Use the **Launch Designer** button to open the visual editor.
-4. Drag nodes onto the canvas:
-    - **Step Nodes**: Assign them a "Workflow Action" (hook) and "Authorized Roles".
-    - **Condition Nodes**: Define branching logic based on the data context.
-5. Connect nodes using arrows to define the flow.
+1. Access the designer at `/workflow/processes`
+2. Create a new process
+3. Launch the visual designer
+4. Add nodes (Step, Condition, Start, End)
+5. Connect nodes using directional arrows
+6. Configure workflow actions, authorized roles, and conditions.
 
-### 4. Starting a Workflow
-
-To start a workflow for a specific business model instance:
+## Starting a Workflow
 
 ```php
 use Workflow\Models\Process;
@@ -116,24 +323,54 @@ $service = app(WorkflowInstanceService::class);
 $instance = $service->initialize($process, $order);
 ```
 
-### 5. Handling Tasks (The Inbox)
+## Workflow Inbox
 
-The package provides a built-in Inbox UI at `/workflow/inbox`. 
+The package provides a built-in runtime task inbox at `/workflow/inbox`. Users can view pending tasks, execute steps, approve/reject requests, and track history.
 
-When a user submits a task through the UI:
-1. The `WorkflowController` resolves the `StepAction` associated with the current step.
-2. It runs the `validate()` method.
-3. If valid, it runs the `execute()` method (the "hook").
-4. Finally, the engine moves the workflow to the next step based on the graph definition.
+## Workflow Execution Flow
 
-## Customization
+1. User submits a task.
+2. `WorkflowController` resolves the workflow action.
+3. `StepAction::validate()` executes.
+4. `StepAction::execute()` executes.
+5. Workflow task is marked completed.
+6. Workflow engine resolves the next node and advances dynamically.
 
-### Custom Node Handlers
-If you need custom routing logic (e.g., waiting for multiple parallel approvals), you can extend `Workflow\Core\Handlers\NodeHandler` and register it in the `StepFactory`.
+## Role-Based Workflow Authorization
 
-### UI Layout
-The package views extend `workflow::task_layout`. You can publish and customize this layout to match your application's theme.
+Steps support role-based execution. Only authorized users with matching roles can execute a workflow task.
+
+## Workflow Cancellation
+
+Supports runtime cancellation with status tracking (`running`, `completed`, `cancelled`, `rejected`), closed tasks, and audit traces with reasons.
+
+## Custom Node Handlers
+
+Advanced users may extend `Workflow\Core\Handlers\NodeHandler` to implement custom behavior like parallel approvals or synchronization nodes.
+
+## Package Technology Stack
+
+- Laravel
+- PHP
+- LogicFlow
+- Blade
+- Bootstrap
+- Eloquent ORM
+
+## Future Roadmap
+
+- parallel workflow branches
+- workflow versioning
+- workflow templates
+- notification engine
+- websocket updates
+- SLA tracking
+- BPMN compatibility
+
+## Contributing
+
+Contributions, architecture suggestions, and feature requests are welcome.
 
 ## License
 
-The MIT License (MIT).
+MIT License
