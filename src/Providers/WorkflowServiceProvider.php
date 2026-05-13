@@ -109,5 +109,14 @@ class WorkflowServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../database/migrations' => database_path('migrations'),
         ], 'workflow-migrations');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Publish Models
+        |--------------------------------------------------------------------------
+        */
+        $this->publishes([
+            __DIR__ . '/../Models' => app_path('Models/Workflow'),
+        ], 'workflow-models');
     }
 }
