@@ -35,8 +35,7 @@ return new class extends Migration
                 ->comment('This indicates what action has been performed in this particular step.');
             $table->text('comment')
                 ->nullable();
-            $table->json('input_data')
-                ->nullable();
+           
             $table->timestamps();
 
             $table->foreign('step_id')->references('id')->on('steps')->onDelete('cascade');
