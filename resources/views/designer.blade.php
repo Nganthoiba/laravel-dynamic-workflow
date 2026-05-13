@@ -4,6 +4,7 @@
 <!-- LogicFlow CSS -->
 <link rel="stylesheet" href="{{ asset('vendor/logicflow/core.css') }}" />
 <link rel="stylesheet" href="{{ asset('vendor/logicflow/extension.css') }}" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
     :root {
         --lf-primary: #3b82f6;

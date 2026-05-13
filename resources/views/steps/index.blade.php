@@ -1,4 +1,4 @@
-@extends('workflow::task_layout')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
