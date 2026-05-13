@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+@endsection
+
 @section('content')
 <div class="container-fluid flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
