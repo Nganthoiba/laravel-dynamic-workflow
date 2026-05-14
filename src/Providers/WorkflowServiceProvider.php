@@ -94,6 +94,16 @@ class WorkflowServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
+        | Publish Workflow Step Views (Runtime Actions)
+        |--------------------------------------------------------------------------
+        */
+        $this->publishes([
+            __DIR__ . '/../../resources/views/workflow/steps'
+                => resource_path('views/workflow/steps'),
+        ], 'workflow-step-views');
+
+        /*
+        |--------------------------------------------------------------------------
         | Publish Assets
         |--------------------------------------------------------------------------
         */

@@ -232,6 +232,12 @@ composer require nganthoiba/laravel-dynamic-workflow
 php artisan vendor:publish --provider="Workflow\Providers\WorkflowServiceProvider"
 ```
 
+Or you can publish specific resources using tags:
+- `workflow-config`: Package configuration
+- `workflow-views`: Management views (inbox, history, designer)
+- `workflow-step-views`: Runtime action views (e.g., Approve and Forward)
+- `workflow-assets`: JS and CSS assets
+
 ### Run Migrations
 
 ```bash
@@ -299,6 +305,47 @@ Register actions inside `config/workflow.php`:
         'action' => \App\Workflow\Actions\ApproveOrderAction::class,
     ],
 ],
+
+## Reference Summary Views
+
+When a user opens a task in their inbox, they need to see the details of the business object (e.g., a Purchase Order) being processed. This package uses a dynamic view injection system for these summaries.
+
+### 1. Create the Summary View
+Create a Blade file in your application at `resources/views/workflow/reference/`. For example, for a `PurchaseOrder` model:
+
+`resources/views/workflow/reference/purchase_order.blade.php`:
+```blade
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Order Number:</strong> {{ $model->order_number }}</p>
+        <p><strong>Date:</strong> {{ $model->created_at->format('d M Y') }}</p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Total Amount:</strong> {{ number_format($model->total_amount, 2) }}</p>
+        <p><strong>Vendor:</strong> {{ $model->vendor->name }}</p>
+    </div>
+</div>
+```
+
+### 2. Register the Mapping
+In `config/workflow.php`, map your business model class to its specific summary view:
+
+```php
+'reference_views' => [
+    \App\Models\PurchaseOrder::class => 'workflow.reference.purchase_order',
+],
+```
+
+The package will now automatically inject this view into the task execution layout (`task_layout.blade.php`) whenever a workflow task related to that model is being performed.
+
+### Convention Over Configuration (Fallback)
+If you do not explicitly register a mapping in `config/workflow.php`, the package will automatically look for a view using a snake_case convention of the model's class name.
+
+**Example:**
+*   **Model Class:** `App\Models\DispatchOrder`
+*   **Default View Path:** `resources/views/workflow/reference/dispatch_order.blade.php`
+
+This allows you to quickly add support for new models simply by creating the corresponding blade file in the `workflow/reference` directory.
 ```
 
 ## Visual Workflow Designing
