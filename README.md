@@ -295,7 +295,7 @@ class ApproveOrderAction implements StepActionInterface
 
 ### Registering Workflow Actions
 
-Register actions inside `config/workflow.php`:
+1. Register actions inside `config/workflow.php`:
 
 ```php
 'workflow_actions' => [
@@ -305,6 +305,22 @@ Register actions inside `config/workflow.php`:
         'action' => \App\Workflow\Actions\ApproveOrderAction::class,
     ],
 ],
+```
+
+2. Create the corresponding blade view at `resources/views/workflow/steps/approve_order_view.blade.php`. **Every workflow step view MUST extend the package's task layout:**
+
+```blade
+@extends('vendor.workflow.task_layout')
+
+@section('form_actions')
+    <button type="submit" name="action_result" value="reject" class="btn btn-outline-danger">
+        Reject
+    </button>
+    <button type="submit" name="action_result" value="approve" class="btn btn-primary">
+        Approve & Forward
+    </button>
+@endsection
+```
 
 ## Reference Summary Views
 
