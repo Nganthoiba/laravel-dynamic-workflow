@@ -233,6 +233,7 @@ php artisan vendor:publish --provider="Workflow\Providers\WorkflowServiceProvide
 ```
 
 Or you can publish specific resources using tags:
+
 - `workflow-config`: Package configuration
 - `workflow-views`: Management views (inbox, history, designer)
 - `workflow-step-views`: Runtime action views (e.g., Approve and Forward)
@@ -327,9 +328,11 @@ class ApproveOrderAction implements StepActionInterface
 When a user opens a task in their inbox, they need to see the details of the business object (e.g., a Purchase Order) being processed. This package uses a dynamic view injection system for these summaries.
 
 ### 1. Create the Summary View
+
 Create a Blade file in your application at `resources/views/workflow/reference/`. For example, for a `PurchaseOrder` model:
 
 `resources/views/workflow/reference/purchase_order.blade.php`:
+
 ```blade
 <div class="row">
     <div class="col-md-6">
@@ -344,6 +347,7 @@ Create a Blade file in your application at `resources/views/workflow/reference/`
 ```
 
 ### 2. Register the Mapping
+
 In `config/workflow.php`, map your business model class to its specific summary view:
 
 ```php
@@ -355,14 +359,17 @@ In `config/workflow.php`, map your business model class to its specific summary 
 The package will now automatically inject this view into the task execution layout (`task_layout.blade.php`) whenever a workflow task related to that model is being performed.
 
 ### Convention Over Configuration (Fallback)
+
 If you do not explicitly register a mapping in `config/workflow.php`, the package will automatically look for a view using a snake_case convention of the model's class name.
 
 **Example:**
-*   **Model Class:** `App\Models\DispatchOrder`
-*   **Default View Path:** `resources/views/workflow/reference/dispatch_order.blade.php`
+
+- **Model Class:** `App\Models\DispatchOrder`
+- **Default View Path:** `resources/views/workflow/reference/dispatch_order.blade.php`
 
 This allows you to quickly add support for new models simply by creating the corresponding blade file in the `workflow/reference` directory.
-```
+
+````
 
 ## Visual Workflow Designing
 
@@ -384,7 +391,11 @@ $order = Order::find(1);
 
 $service = app(WorkflowInstanceService::class);
 $instance = $service->start($process, $order);
-```
+
+// If you are inside a controller, get context from request
+$context = $request->all(); // Or just an empty array if there is nothing to pass
+$service->proceed($instance, $context);
+````
 
 ## Workflow Inbox
 
