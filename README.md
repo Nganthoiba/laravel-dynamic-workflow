@@ -308,10 +308,21 @@ class ApproveOrderAction implements StepActionInterface
 ],
 ```
 
-2. Create the corresponding blade view at `resources/views/workflow/steps/approve_order_view.blade.php`. **Every workflow step view MUST extend the package's task layout:**
+2. Create the corresponding Blade view at `resources/views/workflow/steps/approve_order_view.blade.php`. **Every workflow step view MUST extend the package's task layout.** You can include any number of custom fields within the `form_fields` section, as shown below:
 
 ```blade
 @extends('vendor.workflow.task_layout')
+
+@section('form_fields')
+    <div class="mb-3">
+        <label for="input_field1" class="form-label">Input 1</label>
+        <input type="text" name="input_field1" id="input_field1" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="input_field2" class="form-label">Input 2</label>
+        <input type="text" name="input_field2" id="input_field2" class="form-control">
+    </div>
+@endsection
 
 @section('form_actions')
     <button type="submit" name="action_result" value="reject" class="btn btn-outline-danger">
@@ -322,6 +333,8 @@ class ApproveOrderAction implements StepActionInterface
     </button>
 @endsection
 ```
+
+The parameters submitted via these fields will be processed by the action class that implements `StepActionInterface` (in this case, `ApproveOrderAction`, as defined in the **Workflow Actions (Hooks)** section). The `$data` variable in the `execute` method will contain all the submitted form data.
 
 ## Reference Summary Views
 
