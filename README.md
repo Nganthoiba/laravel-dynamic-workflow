@@ -383,7 +383,7 @@ $process = Process::where('code', 'ORDER_APPROVAL')->first();
 $order = Order::find(1);
 
 $service = app(WorkflowInstanceService::class);
-$instance = $service->initialize($process, $order);
+$instance = $service->start($process, $order);
 ```
 
 ## Workflow Inbox
