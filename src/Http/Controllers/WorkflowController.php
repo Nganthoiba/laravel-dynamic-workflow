@@ -67,7 +67,12 @@ class WorkflowController extends Controller
      */
     public function showTask($id)
     {
-        $task = WorkflowInstanceStep::with(['workflowInstance.process', 'step'])->findOrFail($id);
+        $task = WorkflowInstanceStep::with([
+            'workflowInstance.process', 
+            'step', 
+            'workflowInstance.steps.step.roles', 
+            'workflowInstance.steps.user'
+        ])->findOrFail($id);
         $readonly = false;
 
         if ($task->completed_at) {
