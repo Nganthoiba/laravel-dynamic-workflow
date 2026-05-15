@@ -8,7 +8,7 @@ use Workflow\Http\Controllers\ProcessController;
 use Workflow\Http\Controllers\StepController;
 use Workflow\Http\Controllers\StepTransitionController;
 
-Route::middleware(['web'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     /** Workflow Designer */
     Route::get('/workflow-designer/load/{processId}', [WorkflowDesignerController::class, 'load'])->name('workflow-designer.load');
     Route::get('/workflow-designer/{process}', [WorkflowDesignerController::class, 'show'])->name('workflow-designer.show');
