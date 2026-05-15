@@ -98,7 +98,7 @@ class WorkflowInstanceService
         while ($stepId) {
             $step = Step::findOrFail($stepId);
 
-            if ($step->node_type === 'step'/* || $step->node_type === 'step'*/) {
+            if ($step->node_type === 'step') {
                 // Land on a human task
                 $instance->update(['current_step_id' => $step->id]);
 
