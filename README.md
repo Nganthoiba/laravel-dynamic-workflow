@@ -285,8 +285,14 @@ class ApproveOrderAction implements StepActionInterface
         Model $model,
         WorkflowInstanceStep $workflowInstanceStep
     ): void {
+
+        /**
+         * Perform your business logic by getting the required parameters from * the $data.
+        */
+
         $model->update([
-            'status' => 'approved'
+            'status' => 'approved',
+            'remark' => $data['remarks'],
         ]);
 
         logger()->info("Order {$model->id} approved.");
@@ -382,8 +388,6 @@ If you do not explicitly register a mapping in `config/workflow.php`, the packag
 
 This allows you to quickly add support for new models simply by creating the corresponding blade file in the `workflow/reference` directory.
 
-````
-
 ## Visual Workflow Designing
 
 1. Access the designer at `/workflow/processes`
@@ -408,7 +412,7 @@ $instance = $service->start($process, $order);
 // If you are inside a controller, get context from request
 $context = $request->all(); // Or just an empty array if there is nothing to pass
 $service->proceed($instance, $context);
-````
+```
 
 ## Workflow Inbox
 
