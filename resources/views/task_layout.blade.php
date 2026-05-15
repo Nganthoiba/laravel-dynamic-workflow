@@ -80,7 +80,8 @@
                             </div>
                         </div>
 
-                        <!-- Common Form Fields -->
+                        <!-- Common Form Fields, there can be any number of fields that the programmer/developer want 
+                         to fit -->
                         @yield('form_fields')
 
                         <!-- Default Comment Field if not overridden -->
