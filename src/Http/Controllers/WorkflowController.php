@@ -49,25 +49,41 @@ class WorkflowController extends Controller
     }
 
     /**
+     * Display a list of tasks completed by the current user.
+     */
+    public function outbox()
+    {
+        $tasks = WorkflowInstanceStep::with(['workflowInstance.process', 'step', 'workflowInstance.reference'])
+            ->where('user_id', Auth::id())
+            ->whereNotNull('completed_at')
+            ->orderBy('completed_at', 'desc')
+            ->get();
+
+        return view('workflow::outbox', compact('tasks'));
+    }
+
+    /**
      * Show the execution screen for a specific task.
      */
     public function showTask($id)
     {
         $task = WorkflowInstanceStep::with(['workflowInstance.process', 'step'])->findOrFail($id);
-        
+        $readonly = false;
+
         if ($task->completed_at) {
-            return redirect()->route('workflow.details', $task->workflow_instance_id)
-                ->with('info', 'This task has already been completed.');
+            $readonly = true;
         }
 
         $instance = $task->workflowInstance;
         $step = $task->step;
         $model = $instance->reference;
 
-        // Authorization Check
-        $userRoleIds = Auth::user()->roles?->pluck('id')->toArray() ?? [];
-        if (!$this->authService->canExecuteStep($step, $userRoleIds)) {
-            abort(403, "You are not authorized to perform this task.");
+        // Authorization Check for non-completed tasks
+        if (!$readonly) {
+            $userRoleIds = Auth::user()->roles?->pluck('id')->toArray() ?? [];
+            if (!$this->authService->canExecuteStep($step, $userRoleIds)) {
+                abort(403, "You are not authorized to perform this task.");
+            }
         }
 
         // Resolve View via Handler
@@ -83,6 +99,7 @@ class WorkflowController extends Controller
             'instance' => $instance,
             'step'     => $step,
             'model'    => $model,
+            'readonly' => $readonly,
         ]);
     }
 

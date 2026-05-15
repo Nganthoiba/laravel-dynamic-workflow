@@ -30,6 +30,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         // Task Management
         Route::get('/inbox', [WorkflowController::class, 'inbox'])->name('inbox');
+        Route::get('/outbox', [WorkflowController::class, 'outbox'])->name('outbox');
         Route::get('/tasks/{id}', [WorkflowController::class, 'showTask'])->name('tasks.show');
         Route::post('/tasks/{id}/handle', [WorkflowController::class, 'handleTask'])->name('tasks.handle');
 

@@ -334,7 +334,7 @@ class ApproveOrderAction implements StepActionInterface
 @endsection
 ```
 
-The parameters submitted via these fields will be processed by the action class that implements `StepActionInterface` (in this case, `ApproveOrderAction`, as defined in the **Workflow Actions (Hooks)** section). The `$data` variable in the `execute` method will contain all the submitted form data.
+The parameters passed in these fields will be handled at the **action** class that implements **StepActionInterface** for example in our case is **ApproveOrderAction** as defined earlier in the Workflow Actions (Hooks) section. The variable $data contains all the form data.
 
 ## Reference Summary Views
 
@@ -413,6 +413,10 @@ $service->proceed($instance, $context);
 ## Workflow Inbox
 
 The package provides a built-in runtime task inbox at `/workflow/inbox`. Users can view pending tasks, execute steps, approve/reject requests, and track history.
+
+## Workflow Outbox
+
+The package also provides a built-in outbox at `/workflow/outbox`. Users can view tasks they have previously completed, along with the action taken and completion timestamp. Clicking "View" on an outbox task allows users to see the task details in a read-only mode.
 
 ## Workflow Execution Flow
 

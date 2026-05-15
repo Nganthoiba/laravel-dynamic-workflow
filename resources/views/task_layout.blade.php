@@ -59,16 +59,20 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">Transaction Detail:</h5>
-                    <a href="{{ route('workflow.inbox') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left me-1"></i> Back to Inbox
+                    <a href="{{ $readonly ?? false ? route('workflow.outbox') : route('workflow.inbox') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to {{ $readonly ?? false ? 'Outbox' : 'Inbox' }}
                     </a>
                 </div>
                 <div class="card-body pt-4">
                     <!-- Dynamic Reference Object Details (Config-driven) -->
                     @includeIf($instance->summary_view, ['model' => $model])
 
+                    @if(!($readonly ?? false))
                     <form action="{{ route('workflow.tasks.handle', $task->id) }}" method="POST">
                         @csrf
+                    @else
+                    <div class="workflow-task-readonly">
+                    @endif
                         
                         <div class="alert alert-info border-0 shadow-none bg-label-info mb-4">
                             <div class="d-flex">
@@ -88,16 +92,28 @@
                         @section('comment_field')
                         <div class="mb-4">
                             <label class="form-label fw-bold">Review Remarks / Comments</label>
-                            <textarea name="comment" class="form-control" rows="4" placeholder="Enter your detailed remarks here..." required></textarea>
-                            <div class="form-text">This comment will be visible in the workflow history.</div>
+                            @if(!($readonly ?? false))
+                                <textarea name="comment" class="form-control" rows="4" placeholder="Enter your detailed remarks here..." required></textarea>
+                                <div class="form-text">This comment will be visible in the workflow history.</div>
+                            @else
+                                <div class="p-3 bg-light border rounded min-vh-10">
+                                    {{ $task->comment ?? 'No remarks provided.' }}
+                                </div>
+                            @endif
                         </div>
                         @show
 
                         <!-- Action Buttons -->
+                        @if(!($readonly ?? false))
                         <div class="d-flex justify-content-end gap-2 border-top pt-4">
                             @yield('form_actions')
                         </div>
+                        @endif
+                    @if(!($readonly ?? false))
                     </form>
+                    @else
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
