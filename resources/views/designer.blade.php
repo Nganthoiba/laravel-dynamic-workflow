@@ -4,7 +4,7 @@
 <!-- LogicFlow CSS -->
 <link rel="stylesheet" href="{{ asset('vendor/logicflow/core.css') }}" />
 <link rel="stylesheet" href="{{ asset('vendor/logicflow/extension.css') }}" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons.css') }}">
 <style>
     :root {
         --lf-primary: #3b82f6;
@@ -414,6 +414,7 @@
 <script src="{{ asset('vendor/logicflow/SelectionSelect.js') }}"></script>
 <script>
     const process_id = "{{ $process->id }}";
+    const roleMap = {!! json_encode($roles->mapWithKeys(fn($role) => [$role->id => $role->display_name ?? $role->name])) !!};
     const { LogicFlow } = window;
     const Extension = window.LogicFlowExtension || window;
     
@@ -591,27 +592,105 @@
                 stopZoomGraph: false,
             });
 
-            lf.register('step', ({ RectNode, RectNodeModel }) => {
+            lf.register('step', ({ RectNode, RectNodeModel, h }) => {
                 class StepModel extends RectNodeModel {
                     initNodeData(data) {
                         super.initNodeData(data);
-                        this.width = data.width || 140;
-                        this.height = data.height || 70;
-                        this.radius = data.radius || 8;
+                        this.width = data.width || 180;
+                        this.height = data.height || 90;
+                        this.radius = 10;
                     }
                     getNodeStyle() {
                         const style = super.getNodeStyle();
+                        style.stroke = '#3b82f6';
                         style.strokeWidth = 2;
                         return style;
                     }
-                    getTextStyle() {
-                        const style = super.getTextStyle();
-                        style.dominantBaseline = 'middle';
-                        style.textAnchor = 'middle';
-                        return style;
+                }
+                class StepView extends RectNode {
+                    getShape() {
+                        const { model } = this.props;
+                        const { x, y, width, height, radius, properties } = model;
+                        const style = model.getNodeStyle();
+                        
+                        const headerHeight = height * 0.4;
+                        const padding = 15;
+                        const roles = properties.roles || [];
+                        const roleNames = roles.map(id => roleMap[id] || id).join(', ') || 'No roles assigned';
+                        const name = model.text.value || 'Step';
+
+                        // Truncate text based on padding
+                        const truncate = (str, maxLen) => str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+
+                        return h('g', {}, [
+                            // Main Box
+                            h('rect', {
+                                ...style,
+                                x: x - width / 2,
+                                y: y - height / 2,
+                                width,
+                                height,
+                                rx: radius,
+                                ry: radius,
+                                fill: '#ffffff'
+                            }),
+                            // Header Background
+                            h('path', {
+                                d: `M ${x - width / 2} ${y - height / 2 + radius} 
+                                    A ${radius} ${radius} 0 0 1 ${x - width / 2 + radius} ${y - height / 2}
+                                    L ${x + width / 2 - radius} ${y - height / 2}
+                                    A ${radius} ${radius} 0 0 1 ${x + width / 2} ${y - height / 2 + radius}
+                                    L ${x + width / 2} ${y - height / 2 + headerHeight}
+                                    L ${x - width / 2} ${y - height / 2 + headerHeight}
+                                    Z`,
+                                fill: '#eff6ff',
+                                stroke: 'none'
+                            }),
+                            // Separator
+                            h('line', {
+                                x1: x - width / 2,
+                                y1: y - height / 2 + headerHeight,
+                                x2: x + width / 2,
+                                y2: y - height / 2 + headerHeight,
+                                stroke: '#3b82f6',
+                                strokeWidth: 1
+                            }),
+                            // Step Name (with horizontal padding)
+                            h('text', {
+                                x: x,
+                                y: y - height / 2 + headerHeight / 2 + 5,
+                                textAnchor: 'middle',
+                                fontSize: 12,
+                                fill: '#1e40af',
+                                style: 'font-weight: bold; pointer-events: none;'
+                            }, truncate(name, 22)),
+                            // Roles Label
+                            h('text', {
+                                x: x,
+                                y: y - height / 2 + headerHeight + 18,
+                                textAnchor: 'middle',
+                                fontSize: 8,
+                                fill: '#9ca3af',
+                                style: 'font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none;'
+                            }, 'Assigned Roles'),
+                            // Role Names (with horizontal padding)
+                            h('text', {
+                                x: x,
+                                y: y - height / 2 + headerHeight + 38,
+                                textAnchor: 'middle',
+                                fontSize: 11,
+                                fill: '#4b5563',
+                                style: 'font-weight: 500; pointer-events: none;'
+                            }, truncate(roleNames, 26))
+                        ]);
+                    }
+
+                    // Disable default text rendering since we render it manually in getShape
+                    getText() {
+                        return null;
                     }
                 }
-                return { view: RectNode, model: StepModel };
+                return { view: StepView, model: StepModel };
             });
 
             lf.register('start', ({ EllipseNode, EllipseNodeModel }) => {
@@ -752,7 +831,7 @@
         const transform = lf.graphModel.transformModel;
         const scale = transform.SCALE_X || 1;
         const isEllipse = model.type === 'start' || model.type === 'end';
-        const hh = isEllipse ? (model.ry || 30) : (model.height || 70) / 2;
+        const hh = isEllipse ? (model.ry || 30) : (model.height || 90) / 2;
 
         const svgX = model.x * scale + transform.TRANSLATE_X;
         const svgY = (model.y - hh) * scale + transform.TRANSLATE_Y;
@@ -837,8 +916,8 @@
 
         const { x, y } = model;
         const isEllipse = model.type === 'start' || model.type === 'end' || model.type === 'condition';
-        const hw = isEllipse ? (model.rx || 60) : (model.width || 140) / 2;
-        const hh = isEllipse ? (model.ry || 30) : (model.height || 70) / 2;
+        const hw = isEllipse ? (model.rx || 60) : (model.width || 180) / 2;
+        const hh = isEllipse ? (model.ry || 30) : (model.height || 90) / 2;
 
         const L = x - hw, R = x + hw, T = y - hh, B = y + hh, MX = x, MY = y;
 
@@ -888,8 +967,8 @@
 
         const safeRx = (isFinite(model.rx) && model.rx > 0) ? model.rx : 60;
         const safeRy = (isFinite(model.ry) && model.ry > 0) ? model.ry : 30;
-        const safeW  = (isFinite(model.width)  && model.width  > 0) ? model.width  : 140;
-        const safeH  = (isFinite(model.height) && model.height > 0) ? model.height : 70;
+        const safeW  = (isFinite(model.width)  && model.width  > 0) ? model.width  : 180;
+        const safeH  = (isFinite(model.height) && model.height > 0) ? model.height : 90;
         const safeX  = isFinite(model.x) ? model.x : 0;
         const safeY  = isFinite(model.y) ? model.y : 0;
 
@@ -1151,15 +1230,15 @@
             const nodeModel = lf.getNodeModelById(node.id);
 
             const isEllipse = node.type === 'start' || node.type === 'end' || node.type === 'condition';
-            let currentWidth = 140, currentHeight = 60;
+            let currentWidth = 180, currentHeight = 90;
 
             if (nodeModel) {
                 if (isEllipse) {
                     currentWidth  = (nodeModel.rx || 60) * 2;
                     currentHeight = (nodeModel.ry || 30) * 2;
                 } else {
-                    currentWidth  = nodeModel.width  || 140;
-                    currentHeight = nodeModel.height || 60;
+                    currentWidth  = nodeModel.width  || 180;
+                    currentHeight = nodeModel.height || 90;
                 }
             }
 
@@ -1371,8 +1450,8 @@
                                 nodeData.rx = (uiJson && uiJson.rx > 0) ? uiJson.rx : (nodeType === 'condition' ? 50 : 60);
                                 nodeData.ry = (uiJson && uiJson.ry > 0) ? uiJson.ry : (nodeType === 'condition' ? 50 : 30);
                             } else {
-                                nodeData.width  = (uiJson && uiJson.width  > 0) ? uiJson.width  : 140;
-                                nodeData.height = (uiJson && uiJson.height > 0) ? uiJson.height : 70;
+                                nodeData.width  = (uiJson && uiJson.width  > 0) ? uiJson.width  : 180;
+                                nodeData.height = (uiJson && uiJson.height > 0) ? uiJson.height : 90;
                             }
 
                             lfData.nodes.push(nodeData);
