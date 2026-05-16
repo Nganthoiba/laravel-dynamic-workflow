@@ -54,7 +54,9 @@ class WorkflowController extends Controller
     public function outbox()
     {
         $tasks = WorkflowInstanceStep::with(['workflowInstance.process', 'step', 'workflowInstance.reference'])
+            ->join('steps', 'steps.id', '=', 'workflow_instance_steps.step_id')
             ->where('user_id', Auth::id())
+            ->where('steps.node_type','!=','start')
             ->whereNotNull('completed_at')
             ->orderBy('completed_at', 'desc')
             ->get();
