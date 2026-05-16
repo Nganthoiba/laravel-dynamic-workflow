@@ -134,18 +134,7 @@ return [
             'label' => 'Submission Date',
             'type' => 'date',
             'operators_json' => ['=', '>', '<', '>=', '<='],
-        ],
-        [
-            'key' => 'remarks',
-            'label' => 'Remarks',
-            'type' => 'string',
-            'operators_json' => ['=', 'contains'],
-        ],
+        ],        
         */
     ],
-
-    'templates' => [
-        // Define any predefined templates here in the future
-        // e.g. 'high_value_north' => ['name' => 'High Value in North', 'condition_json' => [...]]
-    ]
 ];
