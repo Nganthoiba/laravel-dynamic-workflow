@@ -597,8 +597,8 @@
                 class StepModel extends RectNodeModel {
                     initNodeData(data) {
                         super.initNodeData(data);
-                        // Increased dimensions to accommodate the split-block layout
-                        this.width = data.width || 180;
+                        // Further increased width (240px) to handle exceptionally long labels without truncation
+                        this.width = data.width || 240;
                         this.height = data.height || 90;
                         this.radius = 10;
                     }
@@ -657,7 +657,7 @@
                                 stroke: '#3b82f6',
                                 strokeWidth: 1
                             }),
-                            // Step Name text
+                            // Step Name text (Limit increased to 40)
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight / 2 + 5,
@@ -665,7 +665,7 @@
                                 fontSize: 12,
                                 fill: '#1e40af',
                                 style: 'font-weight: bold; pointer-events: none;'
-                            }, truncate(name, 22)),
+                            }, truncate(name, 40)),
                             // "Assigned Roles" subtitle label
                             h('text', {
                                 x: x,
@@ -675,7 +675,7 @@
                                 fill: '#9ca3af',
                                 style: 'font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none;'
                             }, 'Assigned Roles'),
-                            // Dynamically mapped role list
+                            // Dynamically mapped role list (Limit increased to 45)
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight + 38,
@@ -683,7 +683,7 @@
                                 fontSize: 10,
                                 fill: '#4b5563',
                                 style: 'font-weight: 500; pointer-events: none;'
-                            }, truncate(roleNames, 28))
+                            }, truncate(roleNames, 45))
                         ]);
                     }
 
@@ -1232,7 +1232,7 @@
             const nodeModel = lf.getNodeModelById(node.id);
 
             const isEllipse = node.type === 'start' || node.type === 'end' || node.type === 'condition';
-            let currentWidth = 180, currentHeight = 90;
+            let currentWidth = 240, currentHeight = 90;
 
             if (nodeModel) {
                 if (isEllipse) {
@@ -1452,7 +1452,7 @@
                                 nodeData.rx = (uiJson && uiJson.rx > 0) ? uiJson.rx : (nodeType === 'condition' ? 50 : 60);
                                 nodeData.ry = (uiJson && uiJson.ry > 0) ? uiJson.ry : (nodeType === 'condition' ? 50 : 30);
                             } else {
-                                nodeData.width  = (uiJson && uiJson.width  > 0) ? uiJson.width  : 180;
+                                nodeData.width  = (uiJson && uiJson.width  > 0) ? uiJson.width  : 240;
                                 nodeData.height = (uiJson && uiJson.height > 0) ? uiJson.height : 90;
                             }
 
