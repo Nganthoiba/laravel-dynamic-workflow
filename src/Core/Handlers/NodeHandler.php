@@ -54,12 +54,15 @@ abstract class NodeHandler implements NodeHandlerInterface
             return null;
         }
 
+        if (empty($actionConfig['view'])) {
+            // Default fallback
+            return 'vendor.workflow.task_layout';
+        }
+
         $viewName = 'workflow.steps.' . $actionConfig['view'];
 
         if (!View::exists($viewName)) {
-            //throw new Exception("View file not found: " . $viewName);
-            // Default fallback
-            return 'vendor.workflow.task_layout';
+            throw new Exception("View file not found: " . $viewName);
         }
 
         return $viewName;
