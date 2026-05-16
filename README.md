@@ -101,31 +101,26 @@ without modifying the core business application.
 
 ## Conditional Workflow Intelligence
 
-The workflow engine supports intelligent runtime routing using condition nodes.
+The workflow engine supports intelligent runtime routing using **Condition Nodes**. These nodes dynamically determine the next workflow path based on runtime data.
 
-Condition nodes dynamically determine the next workflow path based on runtime data.
+### How Conditions Work
 
-Examples:
+A `ConditionNode` is always placed after a `StepNode`. For it to evaluate logic correctly, it requires specific data (keys and values) to be available in the evaluation context. Data can be provided in two ways:
 
-- purchase amount
-- department
-- region
-- user role
-- submission type
-- risk category
-- approval priority
-- custom business fields
+1.  **Client-Side Input (Blade Views):** Data passed from the preceding step's Blade view as form input parameters. For example, a button like `<button name="action_result" value="approved">` will provide the `action_result` key to the following ConditionNode.
+2.  **Model Attributes (Database):** The engine can evaluate fields directly from the Eloquent model associated with the workflow. For instance, an `amount` column in the `purchase_orders` table can be used as an evaluation key.
 
-This allows highly flexible workflow automation.
+### Configuration
 
-Example:
-**If amount > 100000**
-→ Route to Director
+Available condition fields are defined in `config/workflow_conditions.php`. Any key used in your workflow design must either be passed from the client-side form or exist as an attribute on the associated database model.
 
-**Else**
-→ Route directly to Admin
+### Examples
 
-Nested conditional workflows are also supported (e.g., Amount > 100000 → Region = HQ → Risk Level = HIGH), allowing enterprise-grade decision trees.
+- **Purchase Amount:** `If amount > 100,000` → Route to Director.
+- **Action Result:** `If action_result == 'rejected'` → Route to Correction Step.
+- **Region/Department:** `If region == 'HQ'` → Route to Central Admin.
+
+Nested conditional workflows are also supported (e.g., `Amount > 100,000` → `Region == 'HQ'`), allowing for complex, enterprise-grade decision trees.
 
 ## Designed for Enterprise Adaptability
 

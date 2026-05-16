@@ -39,34 +39,74 @@ return [
     | ]
     |
     */
+
+    /**
+     * -----------------------------------------------------------------------------------------------------------
+     * IMPORTANT NOTES: Workflow Condition Nodes
+     * -----------------------------------------------------------------------------------------------------------
+     * A ConditionNode is always placed after a StepNode in a workflow. For the ConditionNode to evaluate
+     * logic correctly, it requires specific data (keys and values) to be available in the evaluation context.
+     * 
+     * Data can be provided to a ConditionNode in two ways:
+     * 
+     * 1. Client-Side Input (Blade Views):
+     *    Data can be passed from the preceding step's Blade view as form input parameters.
+     *    Example: If a step uses `resources/views/workflow/steps/approve_purchase_order.blade.php`, 
+     *    the form should include an input or button with a `name` matching the 'key' defined below.
+     *    A button like `<button name="action_result" value="approved">` will provide the 
+     *    'action_result' key to the following ConditionNode.
+     * 
+     * 2. Model Attributes (Database):
+     *    The ConditionNode can also evaluate fields present in the underlying Eloquent model 
+     *    associated with the workflow instance.
+     *    Example: If the workflow is for a `PurchaseOrder` model, any column in the `purchase_orders` 
+     *    table (e.g., 'amount') can be used as a 'key' for evaluation.
+     * 
+     * SUMMARY:
+     * Any key defined in the 'fields' array below must either be passed from the client-side 
+     * form or exist as an accessible attribute on the associated database model.
+     */
+
+     /*
+    @section('form_actions')
+        <button type="submit" name="action_result" value="reject" class="btn btn-outline-danger px-4">
+            <i class="bi bi-x-circle me-1"></i> Reject
+        </button>
+        <button type="submit" name="action_result" value="approve" class="btn btn-primary px-5">
+            <i class="bi bi-check2-circle me-1"></i> Approve & Forward
+        </button>
+    @endsection
+    
+    */
     'fields' => [
         [
-            'key' => 'assistant_manager_approved',
+            'key' => 'action_result',
             'label' => 'Assistant Manager Approved',
             'type' => 'enum',
             'operators_json' => ['=', '!='],
             'options_json' => [
-                ['value' => '1', 'label' => 'Yes'],
-                ['value' => '0', 'label' => 'No'],
+                ['value' => 'approved', 'label' => 'Approve'],
+                ['value' => 'rejected', 'label' => 'Reject'],
             ],
         ],
         [
-            'key' => 'admin_approved',
+            'key' => 'action_result',
             'label' => 'Admin Approved',
             'type' => 'enum',
             'operators_json' => ['=', '!='],
             'options_json' => [
-                ['value' => '1', 'label' => 'Yes'],
-                ['value' => '0', 'label' => 'No'],
+                ['value' => 'approved', 'label' => 'Approve'],
+                ['value' => 'rejected', 'label' => 'Reject'],
             ],
         ],
-        /*
+        
         [
             'key' => 'amount',
             'label' => 'Total Amount',
             'type' => 'number',
             'operators_json' => ['=', '!=', '>', '<', '>=', '<='],
         ],
+        /*
         [
             'key' => 'region',
             'label' => 'Region',
