@@ -592,10 +592,12 @@
                 stopZoomGraph: false,
             });
 
+            // Register custom 'step' node with premium split-block UI
             lf.register('step', ({ RectNode, RectNodeModel, h }) => {
                 class StepModel extends RectNodeModel {
                     initNodeData(data) {
                         super.initNodeData(data);
+                        // Increased dimensions to accommodate the split-block layout
                         this.width = data.width || 180;
                         this.height = data.height || 90;
                         this.radius = 10;
@@ -607,6 +609,7 @@
                         return style;
                     }
                 }
+
                 class StepView extends RectNode {
                     getShape() {
                         const { model } = this.props;
@@ -614,16 +617,15 @@
                         const style = model.getNodeStyle();
                         
                         const headerHeight = height * 0.4;
-                        const padding = 15;
                         const roles = properties.roles || [];
                         const roleNames = roles.map(id => roleMap[id] || id).join(', ') || 'No roles assigned';
                         const name = model.text.value || 'Step';
 
-                        // Truncate text based on padding
+                        // Truncate helper to ensure text stays within node boundaries
                         const truncate = (str, maxLen) => str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
 
                         return h('g', {}, [
-                            // Main Box
+                            // Main container box
                             h('rect', {
                                 ...style,
                                 x: x - width / 2,
@@ -634,7 +636,7 @@
                                 ry: radius,
                                 fill: '#ffffff'
                             }),
-                            // Header Background
+                            // Header background (rounded top corners)
                             h('path', {
                                 d: `M ${x - width / 2} ${y - height / 2 + radius} 
                                     A ${radius} ${radius} 0 0 1 ${x - width / 2 + radius} ${y - height / 2}
@@ -646,7 +648,7 @@
                                 fill: '#eff6ff',
                                 stroke: 'none'
                             }),
-                            // Separator
+                            // Header-Body separator line
                             h('line', {
                                 x1: x - width / 2,
                                 y1: y - height / 2 + headerHeight,
@@ -655,7 +657,7 @@
                                 stroke: '#3b82f6',
                                 strokeWidth: 1
                             }),
-                            // Step Name (with horizontal padding)
+                            // Step Name text
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight / 2 + 5,
@@ -664,7 +666,7 @@
                                 fill: '#1e40af',
                                 style: 'font-weight: bold; pointer-events: none;'
                             }, truncate(name, 22)),
-                            // Roles Label
+                            // "Assigned Roles" subtitle label
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight + 18,
@@ -673,19 +675,19 @@
                                 fill: '#9ca3af',
                                 style: 'font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none;'
                             }, 'Assigned Roles'),
-                            // Role Names (with horizontal padding)
+                            // Dynamically mapped role list
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight + 38,
                                 textAnchor: 'middle',
-                                fontSize: 11,
+                                fontSize: 10,
                                 fill: '#4b5563',
                                 style: 'font-weight: 500; pointer-events: none;'
-                            }, truncate(roleNames, 26))
+                            }, truncate(roleNames, 28))
                         ]);
                     }
 
-                    // Disable default text rendering since we render it manually in getShape
+                    // Suppress default text rendering to avoid conflict with our custom labels
                     getText() {
                         return null;
                     }
