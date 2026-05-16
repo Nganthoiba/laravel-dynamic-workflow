@@ -144,8 +144,14 @@
 @section('content')
 <div class="container-fluid py-4" id="designer_layout">
     <div class="d-flex justify-content-between align-items-center mb-4 px-2">
-        <div>
-            <p class="text-muted small mb-0">Process Name: <span class="text-primary fw-bold">{{ $process->name }}</span></p>
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ route('workflow.processes.index') }}" class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Back to Processes">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <p class="text-muted small mb-0">Workflow Designer</p>
+                <h5 class="fw-bold text-primary mb-0">{{ $process->name }}</h5>
+            </div>
         </div>
         <div class="d-flex gap-2">
             <!-- Zoom Controls -->
