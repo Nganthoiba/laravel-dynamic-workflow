@@ -357,6 +357,16 @@ class ApproveOrderAction implements StepActionInterface
 
 The parameters passed in these fields will be handled at the **action** class that implements **StepActionInterface** for example in our case is **ApproveOrderAction** as defined earlier in the Workflow Actions (Hooks) section. The variable $data contains all the form data.
 
+## Reference Model Requirements
+
+> [!IMPORTANT]
+> **Compulsory Status Field:**
+> In the `workflow_instances` database table (represented by the `WorkflowInstance` model), there is a field called `reference_type` which can store the class name of any Eloquent model (e.g., `App\Models\PurchaseOrder`) that refers to a record in your application's database. 
+> 
+> The database table associated with **any** Eloquent model used as a `reference_type` **must compulsorily have a `status` column/field**.
+> 
+> The dynamic workflow runtime engine, the inbox/outbox task management lists, and the main task auditing layouts (`task_layout.blade.php`) heavily rely on this reference table's `status` field to correctly track, validate, and visually render color-coded badge states (such as `Approved`, `Completed`, `Rejected`, or `Cancelled`) across the application workflow lifecycle.
+
 ## Reference Summary Views
 
 When a user opens a task in their inbox, they need to see the details of the business object (e.g., a Purchase Order) being processed. This package uses a dynamic view injection system for these summaries.

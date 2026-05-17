@@ -109,9 +109,24 @@
                     <!-- Workflow Progress Timeline -->
                     <div class="workflow-timeline px-2">
                         @foreach($instance->steps->sortBy('created_at') as $history)
+                            @php
+                                $isRejectedOrCancelled = false;
+                                if ($history->completed_at) {
+                                    $action = strtolower($history->action ?? '');
+                                    $refStatus = strtolower($model->status ?? '');
+                                    if (in_array($action, ['rejected', 'reject', 'cancelled', 'cancel']) || in_array($refStatus, ['rejected', 'reject', 'cancelled', 'canceled'])) {
+                                        $isRejectedOrCancelled = true;
+                                    }
+                                }
+                            @endphp
                             <div class="timeline-item pb-4 {{ $loop->last ? 'last' : '' }}">
                                 <div class="timeline-visual">
-                                    <div class="timeline-dot {{ $history->completed_at ? 'bg-success' : 'bg-warning animate-pulse' }}"></div>
+                                    <div class="timeline-dot 
+                                        @if(!$history->completed_at) bg-warning animate-pulse
+                                        @elseif($isRejectedOrCancelled) bg-danger
+                                        @else bg-success
+                                        @endif">
+                                    </div>
                                     @if(!$loop->last)
                                         <div class="timeline-line"></div>
                                     @endif
@@ -121,8 +136,13 @@
                                     
                                     @if($history->completed_at)
                                         <div class="d-flex align-items-center mb-1">
-                                            <i class="bi bi-check2-circle text-success me-1 small"></i>
-                                            <small class="text-success fw-semibold" style="font-size: 0.75rem;">{{ $history->action }}</small>
+                                            @if($isRejectedOrCancelled)
+                                                <i class="bi bi-x-circle text-danger me-1 small"></i>
+                                                <small class="text-danger fw-semibold" style="font-size: 0.75rem;">{{ $history->action }}</small>
+                                            @else
+                                                <i class="bi bi-check2-circle text-success me-1 small"></i>
+                                                <small class="text-success fw-semibold" style="font-size: 0.75rem;">{{ $history->action }}</small>
+                                            @endif
                                         </div>
                                         <div class="small text-muted mb-1" style="font-size: 0.7rem;">
                                             <i class="bi bi-person me-1"></i> {{ $history->user->full_name ?? 'System' }}
@@ -131,7 +151,7 @@
                                             <i class="bi bi-clock me-1"></i> {{ $history->completed_at->format('M d, Y h:i A') }}
                                         </div>
                                         @if($history->comment)
-                                            <div class="mt-2 p-2 bg-light rounded small border-start border-3 border-success" style="font-size: 0.7rem; font-style: italic;">
+                                            <div class="mt-2 p-2 bg-light rounded small border-start border-3 {{ $isRejectedOrCancelled ? 'border-danger' : 'border-success' }}" style="font-size: 0.7rem; font-style: italic;">
                                                 "{{ $history->comment }}"
                                             </div>
                                         @endif
