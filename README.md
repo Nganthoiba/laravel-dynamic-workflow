@@ -126,6 +126,44 @@ For example, if `action_result` is used as a key in `workflow_conditions.php`, i
 > ```
 > If `action_result` is omitted, the engine falls back to the step's default registered `workflow_action` code. Passing a distinct action value (e.g., `approve`, `reject`, or `send_back`) ensures that the precise decision made by the user is recorded in the task history audit trail and allows custom step actions (like `ApproveOrderAction`) to execute conditional business logic based on that selection.
 
+### Adding a New Condition Field
+
+To make a new field available for conditional routing in the visual workflow designer, append its configuration array to the `fields` list within `config/workflow_conditions.php`.
+
+#### Field Configuration Schema
+
+| Key | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `key` | `string` | **Yes** | The unique machine-readable identifier (e.g., `amount`, `region`) that the engine looks for in the evaluation context (from client form parameters or model columns). |
+| `label` | `string` | **Yes** | The human-readable name displayed in the visual designer's condition builder dropdown. |
+| `type` | `string` | **Yes** | The input value type for the UI. Supported types: `number`, `string`, `date`, `enum`. |
+| `operators_json` | `array` | **Yes** | List of allowed logical operators. Supported: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `contains`. |
+| `options_json` | `array` | Required if type is `enum` | An array of option objects defining the dropdown values. Each option must contain `value` and `label`. |
+
+#### Example: Adding a Department Condition
+
+To register a new `department` condition field, update `config/workflow_conditions.php` as follows:
+
+```php
+'fields' => [
+    // ... existing condition fields
+
+    [
+        'key' => 'department',
+        'label' => 'Department',
+        'type' => 'enum',
+        'operators_json' => ['=', '!='],
+        'options_json' => [
+            ['value' => 'sales', 'label' => 'Sales Dept'],
+            ['value' => 'hr', 'label' => 'Human Resources'],
+            ['value' => 'engineering', 'label' => 'Engineering'],
+        ],
+    ],
+],
+```
+
+Once declared, this field will instantly populate the visual editor's condition node dropdown, enabling custom business flows (e.g. `If department == sales` → Route to Sales Director).
+
 ### Examples
 
 - **Purchase Amount:** `If amount > 100,000` → Route to Director.
