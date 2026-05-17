@@ -2,89 +2,112 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons.css') }}">
+<style>
+    .process-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .process-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+    }
+    .btn-designer {
+        background: #f0f7ff;
+        color: #007bff;
+        border: 1px solid #cce5ff;
+    }
+    .btn-designer:hover {
+        background: #007bff;
+        color: #fff;
+    }
+</style>
 @endsection
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card border-0 shadow-lg rounded-4">
-                <div class="card-header bg-primary text-white py-3 rounded-top-4 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-diagram-3-fill me-2"></i>Workflow Processes</h5>
-                    <a href="{{ route('workflow.processes.create') }}" class="btn btn-light btn-sm rounded-pill px-3 fw-bold">
-                        <i class="bi bi-plus-lg me-1"></i> Create Process
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light text-uppercase small fw-bold">
-                                <tr>
-                                    <th class="ps-4">Process Details</th>
-                                    <th class="text-center">Code</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($processes as $process)
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="fw-bold text-dark fs-6">{{ $process->name }}</div>
-                                            <div class="text-muted small text-truncate" style="max-width: 300px;">{{ $process->description ?? 'No description available' }}</div>
-                                        </td>
-                                        <td class="text-center py-3">
-                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-3 fw-semibold">
-                                                {{ $process->code }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center py-3">
-                                            @if($process->is_active)
-                                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-medium">
-                                                    <i class="bi bi-check-circle-fill me-1"></i> Active
-                                                </span>
-                                            @else
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fw-medium">
-                                                    <i class="bi bi-dash-circle-fill me-1"></i> Inactive
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="text-end pe-4 py-3">
-                                            <div class="btn-group shadow-sm rounded-3 overflow-hidden">
-                                                <a href="{{ route('workflow-designer.show', $process) }}" class="btn btn-outline-primary btn-sm px-3" title="Design Workflow">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
-                                                <a href="{{ route('workflow.processes.edit', $process) }}" class="btn btn-outline-secondary btn-sm px-3" title="Edit Properties">
-                                                    <i class="bi bi-gear"></i>
-                                                </a>
-                                                <form action="{{ route('workflow.processes.destroy', $process) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this process?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm px-3" title="Delete">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted italic">
-                                            No processes found. Start by creating a new one.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                @if($processes->hasPages())
-                    <div class="card-footer bg-white py-3 rounded-bottom-4">
-                        {{ $processes->links() }}
-                    </div>
-                @endif
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <div>
+            <h4 class="fw-bold mb-0">Workflow Management</h4>
+            <p class="text-muted small mb-0">Design and manage your business processes</p>
         </div>
+        <a href="{{ route('workflow.processes.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> Create New Process
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom text-uppercase small fw-bold text-muted">
+                    <tr>
+                        <th class="ps-4 py-3">Process Definition</th>
+                        <th class="text-center py-3">Identifier</th>
+                        <th class="text-center py-3">Status</th>
+                        <th class="text-end pe-4 py-3">Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($processes as $process)
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 bg-primary bg-opacity-10 p-2 me-3 text-primary">
+                                        <i class="bi bi-diagram-3 fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-6">{{ $process->name }}</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 400px;">
+                                            {{ $process->description ?? 'No description provided' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center py-3">
+                                <code class="text-primary fw-medium bg-light px-2 py-1 rounded small">{{ $process->code }}</code>
+                            </td>
+                            <td class="text-center py-3">
+                                @if($process->is_active)
+                                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-medium">
+                                        <span class="d-inline-block bg-success rounded-circle me-1" style="width: 6px; height: 6px;"></span> Active
+                                    </span>
+                                @else
+                                    <span class="badge bg-light text-muted px-3 py-2 rounded-pill fw-medium border">
+                                        Inactive
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-end pe-4 py-3">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ route('workflow-designer.show', $process) }}" class="btn btn-designer btn-sm rounded-3 px-3 fw-bold" title="Open Designer">
+                                        <i class="bi bi-palette-fill me-1"></i> Designer
+                                    </a>
+                                    <a href="{{ route('workflow.processes.edit', $process) }}" class="btn btn-outline-primary btn-sm rounded-3 px-3 fw-bold" title="Edit Process">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit Process
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-folder2-open display-1 text-light"></i>
+                                    <h5 class="mt-3 text-muted">No Workflows Found</h5>
+                                    <p class="text-muted small">Ready to automate? Create your first workflow process to get started.</p>
+                                    <a href="{{ route('workflow.processes.create') }}" class="btn btn-primary rounded-pill px-4 mt-2 shadow-sm">
+                                        Create New Process
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($processes->hasPages())
+            <div class="card-footer bg-white py-3 border-top-0">
+                {{ $processes->links() }}
+            </div>
+        @endif
     </div>
 </div>
 @endsection

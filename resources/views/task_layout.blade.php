@@ -2,6 +2,7 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons.css') }}">
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> -->
 @endsection
 
 @section('content')
@@ -18,7 +19,7 @@
                 </div>
                 <div class="card-body pt-4">
                     <div class="mb-2">
-                        <ul class="list-unstyled mb-0">
+                        <ul class="list-unstyled mb-0 d-flex flex-wrap gap-3 justify-content-around">
                             <li class="mb-3">
                                 <span class="fw-bold d-block text-muted small text-uppercase">Process</span>
                                 <span class="small">{{ $instance->process->name }}</span>
@@ -39,7 +40,7 @@
                                 <span class="small">{{ $task->created_at->format('M d, Y h:i A') }}</span>
                             </li>
                         </ul>
-                </div>
+                    </div>
 
                     <!-- Dynamic Reference Object Details (Config-driven) -->
                     @includeIf($instance->summary_view, ['model' => $model])
@@ -102,19 +103,10 @@
             <!-- Business Model Summary -->
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-label-primary py-3">
-                    <h6 class="mb-0 fw-bold">Status</h6>
+                    <h6 class="mb-0 fw-bold">Workflow Progress</h6>
                 </div>
                 <div class="card-body p-2">
-                    <div class="d-flex align-items-center p-2 bg-light rounded border border-dashed mb-4">
-                        <i class="bi bi-file-earmark-text fs-3 me-3 text-secondary"></i>
-                        <div>
-                            <span class="d-block fw-semibold">{{ class_basename($instance->reference_type) }}</span>
-                            <small class="text-muted">Status: {{ $instance->status ?? 'Active' }}</small>
-                        </div>
-                    </div>
-
                     <!-- Workflow Progress Timeline -->
-                    <h6 class="fw-bold mb-3 px-2 text-uppercase small text-muted">Workflow Progress</h6>
                     <div class="workflow-timeline px-2">
                         @foreach($instance->steps->sortBy('created_at') as $history)
                             <div class="timeline-item pb-4 {{ $loop->last ? 'last' : '' }}">
@@ -130,7 +122,7 @@
                                     @if($history->completed_at)
                                         <div class="d-flex align-items-center mb-1">
                                             <i class="bi bi-check2-circle text-success me-1 small"></i>
-                                            <small class="text-success fw-semibold" style="font-size: 0.75rem;">Completed</small>
+                                            <small class="text-success fw-semibold" style="font-size: 0.75rem;">{{ $history->action }}</small>
                                         </div>
                                         <div class="small text-muted mb-1" style="font-size: 0.7rem;">
                                             <i class="bi bi-person me-1"></i> {{ $history->user->full_name ?? 'System' }}

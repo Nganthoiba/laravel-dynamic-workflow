@@ -81,7 +81,7 @@ class WorkflowInstanceService
                     'completed_at' => \now(),
                     'user_id'      => Auth::id(),
                     'comment'      => $context['comment'] ?? null,
-                    'action'       => $currentStep->workflow_action,
+                    'action'       => $context['action_result']??$currentStep->workflow_action,
                 ]);
             }
 

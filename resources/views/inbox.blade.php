@@ -23,10 +23,10 @@
                 <table class="table table-hover align-middle mb-0 workflow-inbox-table">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4">Task Name</th>
-                            <th>Process</th>
+                            <th class="ps-4">Process / Task</th>
                             <th>Reference</th>
                             <th>Assigned Date</th>
+                            <th>Status</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -35,17 +35,19 @@
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex flex-column">
-                                        <span class="fw-bold text-dark" title="{{ $task->step->name }}">
-                                            {{ \Illuminate\Support\Str::limit($task->step->name, 30) }}
+                                        <span class="text-muted small text-uppercase fw-semibold mb-1" style="font-size: 0.72rem; letter-spacing: 0.5px;" title="{{ $task->workflowInstance->process->name }}">
+                                            {{ \Illuminate\Support\Str::limit($task->workflowInstance->process->name, 35) }}
                                         </span>
-                                        <small class="text-muted" title="{{ $task->step->description }}">
-                                            {{ \Illuminate\Support\Str::limit($task->step->description ?? 'No description available', 50) }}
-                                        </small>
+                                        <span class="fw-bold text-dark task-title" title="{{ $task->step->name }}">
+                                            {{ \Illuminate\Support\Str::limit($task->step->name, 35) }}
+                                        </span>
+                                        @if($task->step->description)
+                                            <small class="text-muted text-truncate mt-1" style="max-width: 300px;" title="{{ $task->step->description }}">
+                                                {{ \Illuminate\Support\Str::limit($task->step->description, 50) }}
+                                            </small>
+                                        @endif
                                     </div>
                                 </td>
-                                <td title="{{ $task->workflowInstance->process->name }}">
-                                    <span class="badge bg-label-info">{{ \Illuminate\Support\Str::limit($task->workflowInstance->process->name, 30) }}</span>
-                                </</td>
                                 <td>
                                     <div class="d-flex flex-column">
                                         <span class="fw-semibold">{{ class_basename($task->workflowInstance->reference_type) }}</span>
@@ -57,6 +59,20 @@
                                         <span>{{ $task->entered_at ? $task->entered_at->format('M d, Y') : $task->created_at->format('M d, Y') }}</span>
                                         <small class="text-muted">{{ $task->created_at->diffForHumans() }}</small>
                                     </div>
+                                </td>
+                                <td>
+                                    @php
+                                        $refStatus = strtolower($task->workflowInstance->reference->status ?? '');
+                                        $badgeClass = match($refStatus) {
+                                            'approved', 'completed' => 'bg-label-success',
+                                            'rejected', 'cancelled', 'canceled' => 'bg-label-danger',
+                                            'pending', 'in_progress', 'draft' => 'bg-label-info',
+                                            default => 'bg-label-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }}">
+                                        {{ ucfirst(strtolower(str_replace('_', ' ', $task->workflowInstance->reference->status ?? 'Unknown'))) }}
+                                    </span>
                                 </td>
                                 <td class="text-center pe-4">
                                     <a href="{{ route('workflow.tasks.show', $task->id) }}" class="btn btn-primary btn-sm rounded-pill px-3">
@@ -101,15 +117,19 @@
 @push('styles')
 <style>
     .workflow-inbox-table {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
     }
     .workflow-inbox-table th {
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     .workflow-inbox-table .badge {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+    }
+    .workflow-inbox-table .task-title {
+        font-size: 0.82rem;
+        font-weight: 700;
     }
 </style>
 @endpush
