@@ -1,8 +1,7 @@
 @extends('layouts.app')
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons.css') }}">
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 @endsection
 
 @section('content')
@@ -113,8 +112,8 @@
                                 $isRejectedOrCancelled = false;
                                 if ($history->completed_at) {
                                     $action = strtolower($history->action ?? '');
-                                    $refStatus = strtolower($model->status ?? '');
-                                    if (in_array($action, ['rejected', 'reject', 'cancelled', 'cancel']) || in_array($refStatus, ['rejected', 'reject', 'cancelled', 'canceled'])) {
+                                    //$refStatus = strtolower($model->status ?? '');
+                                    if (in_array($action, ['rejected', 'reject', 'cancelled', 'cancel']) /*|| in_array($refStatus, ['rejected', 'reject', 'cancelled', 'canceled'])*/) {
                                         $isRejectedOrCancelled = true;
                                     }
                                 }
