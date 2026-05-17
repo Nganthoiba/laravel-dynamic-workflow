@@ -114,6 +114,18 @@ A `ConditionNode` is always placed after a `StepNode`. For it to evaluate logic 
 
 Available condition fields are defined in `config/workflow_conditions.php`. Any key used in your workflow design must either be passed from the client-side form or exist as an attribute on the associated database model.
 
+For example, if `action_result` is used as a key in `workflow_conditions.php`, it must be passed from the client-side form as an input parameter. This is because `action_result` is not an attribute of the business model itself; it is a custom parameter passed directly from the client form to the `ConditionNode`.
+
+> [!IMPORTANT]
+> **Why `action_result` is Compulsory:**
+> Even if `action_result` is not explicitly used as a condition in `workflow_conditions.php`, developers **must** ensure this parameter is sent from the client-side form (for example, through button submission like `name="action_result"`).
+> 
+> When completing a step, the workflow engine (specifically inside `WorkflowInstanceService`) uses it to record the exact user action in the execution history:
+> ```php
+> 'action' => $context['action_result'] ?? $currentStep->workflow_action,
+> ```
+> If `action_result` is omitted, the engine falls back to the step's default registered `workflow_action` code. Passing a distinct action value (e.g., `approve`, `reject`, or `send_back`) ensures that the precise decision made by the user is recorded in the task history audit trail and allows custom step actions (like `ApproveOrderAction`) to execute conditional business logic based on that selection.
+
 ### Examples
 
 - **Purchase Amount:** `If amount > 100,000` → Route to Director.
@@ -272,6 +284,7 @@ class ApproveOrderAction implements StepActionInterface
     {
         return validator($data, [
             'remarks' => 'nullable|string|max:500',
+            'action_result' => 'nullable|string',
         ])->validate();
     }
 
@@ -285,10 +298,17 @@ class ApproveOrderAction implements StepActionInterface
          * Perform your business logic by getting the required parameters from * the $data.
         */
 
-        $model->update([
-            'status' => 'approved',
-            'remark' => $data['remarks'],
-        ]);
+        if($data['action_result'] == 'reject') {
+            $model->update([
+                'status' => 'rejected',
+                'remark' => $data['remarks'],
+            ]);
+        } else {
+            $model->update([
+                'status' => 'approved',
+                'remark' => $data['remarks'],
+            ]);
+        }
 
         logger()->info("Order {$model->id} approved.");
     }
