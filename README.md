@@ -119,11 +119,13 @@ For example, if `action_result` is used as a key in `workflow_conditions.php`, i
 > [!IMPORTANT]
 > **Why `action_result` is Compulsory:**
 > Even if `action_result` is not explicitly used as a condition in `workflow_conditions.php`, developers **must** ensure this parameter is sent from the client-side form (for example, through button submission like `name="action_result"`).
-> 
+>
 > When completing a step, the workflow engine (specifically inside `WorkflowInstanceService`) uses it to record the exact user action in the execution history:
+>
 > ```php
 > 'action' => $context['action_result'] ?? $currentStep->workflow_action,
 > ```
+>
 > If `action_result` is omitted, the engine falls back to the step's default registered `workflow_action` code. Passing a distinct action value (e.g., `approve`, `reject`, or `send_back`) ensures that the precise decision made by the user is recorded in the task history audit trail and allows custom step actions (like `ApproveOrderAction`) to execute conditional business logic based on that selection.
 
 ### Adding a New Condition Field
@@ -132,13 +134,13 @@ To make a new field available for conditional routing in the visual workflow des
 
 #### Field Configuration Schema
 
-| Key | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `key` | `string` | **Yes** | The unique machine-readable identifier (e.g., `amount`, `region`) that the engine looks for in the evaluation context (from client form parameters or model columns). |
-| `label` | `string` | **Yes** | The human-readable name displayed in the visual designer's condition builder dropdown. |
-| `type` | `string` | **Yes** | The input value type for the UI. Supported types: `number`, `string`, `date`, `enum`. |
-| `operators_json` | `array` | **Yes** | List of allowed logical operators. Supported: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `contains`. |
-| `options_json` | `array` | Required if type is `enum` | An array of option objects defining the dropdown values. Each option must contain `value` and `label`. |
+| Key              | Type     | Required                   | Description                                                                                                                                                           |
+| :--------------- | :------- | :------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `key`            | `string` | **Yes**                    | The unique machine-readable identifier (e.g., `amount`, `region`) that the engine looks for in the evaluation context (from client form parameters or model columns). |
+| `label`          | `string` | **Yes**                    | The human-readable name displayed in the visual designer's condition builder dropdown.                                                                                |
+| `type`           | `string` | **Yes**                    | The input value type for the UI. Supported types: `number`, `string`, `date`, `enum`.                                                                                 |
+| `operators_json` | `array`  | **Yes**                    | List of allowed logical operators. Supported: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `contains`.                                                                      |
+| `options_json`   | `array`  | Required if type is `enum` | An array of option objects defining the dropdown values. Each option must contain `value` and `label`.                                                                |
 
 #### Example: Adding a Department Condition
 
@@ -384,10 +386,10 @@ class ApproveOrderAction implements StepActionInterface
 @endsection
 
 @section('form_actions')
-    <button type="submit" name="action_result" value="reject" class="btn btn-outline-danger">
+    <button type="submit" name="action_result" value="rejected" class="btn btn-outline-danger">
         Reject
     </button>
-    <button type="submit" name="action_result" value="approve" class="btn btn-primary">
+    <button type="submit" name="action_result" value="approved" class="btn btn-primary">
         Approve & Forward
     </button>
 @endsection
@@ -399,10 +401,10 @@ The parameters passed in these fields will be handled at the **action** class th
 
 > [!IMPORTANT]
 > **Compulsory Status Field:**
-> In the `workflow_instances` database table (represented by the `WorkflowInstance` model), there is a field called `reference_type` which can store the class name of any Eloquent model (e.g., `App\Models\PurchaseOrder`) that refers to a record in your application's database. 
-> 
+> In the `workflow_instances` database table (represented by the `WorkflowInstance` model), there is a field called `reference_type` which can store the class name of any Eloquent model (e.g., `App\Models\PurchaseOrder`) that refers to a record in your application's database.
+>
 > The database table associated with **any** Eloquent model used as a `reference_type` **must compulsorily have a `status` column/field**.
-> 
+>
 > The dynamic workflow runtime engine, the inbox/outbox task management lists, and the main task auditing layouts (`task_layout.blade.php`) heavily rely on this reference table's `status` field to correctly track, validate, and visually render color-coded badge states (such as `Approved`, `Completed`, `Rejected`, or `Cancelled`) across the application workflow lifecycle.
 
 ## Reference Summary Views
@@ -451,14 +453,86 @@ If you do not explicitly register a mapping in `config/workflow.php`, the packag
 
 This allows you to quickly add support for new models simply by creating the corresponding blade file in the `workflow/reference` directory.
 
-## Visual Workflow Designing
+## Process Creation & Visual Workflow Designing
 
-1. Access the designer at `/workflow/processes`
-2. Create a new process
-3. Launch the visual designer
-4. Add nodes (Step, Condition, Start, End)
-5. Connect nodes using directional arrows
-6. Configure workflow actions, authorized roles, and conditions.
+The package provides a complete administrative UI to define workflow metadata and visually design execution pipelines without editing code.
+
+---
+
+### 1. Managing & Creating Workflow Processes
+
+Navigate to `/workflow/processes` to access the **Workflow Management Dashboard**. Here, all processes are listed with their metadata, unique codes, active/inactive statuses, and shortcuts to edit properties or launch the visual canvas.
+
+#### Creating a New Process
+1. Click **Create New Process** to open the creation form (`/workflow/processes/create`).
+2. **Process Name**: A descriptive name for the process (e.g., `Purchase Order Approval`).
+3. **Machine Code**: A unique uppercase identifier (e.g. `PURCHASE_ORDER_APPROVAL`) used programmatically to launch workflows. The form automatically converts the name to a clean snake-case slug in real-time, but you can manually override it.
+4. **Description**: Define the business scope and purpose of the process.
+5. **Activate Process (Toggle)**: Choose whether to activate the process. Inactive processes cannot be used to start new workflow instances.
+
+---
+
+### 2. Designing Workflows Graphically on the Canvas
+
+Click the blue **Designer** button beside any process in the list to open the visual editing canvas (`/workflow/designer/{id}`).
+
+The canvas is powered by an interactive **LogicFlow** engine that enables full graph layout customization.
+
+#### 🧰 Toolbox (Left Sidebar Node Types)
+Drag and drop any of the four standard shapes from the left sidebar toolbox onto the canvas:
+
+*   🟢 **Start Node** (Green Ellipse): Marks the entry point of the workflow pipeline. Every process must have exactly one.
+*   🔵 **Step Node** (Blue Split-Block Rectangle): Represents an executable task. 
+    *   **Header**: Displays the Step Name (up to 40 characters).
+    *   **Body**: Dynamically displays the list of **Assigned Roles** (up to 45 characters).
+*   🟡 **Condition Node** (Yellow Diamond): Performs logical evaluation to branch routing paths dynamically.
+*   🔴 **End Node** (Red Ellipse): Marks a final termination point of the workflow process.
+
+#### 🎮 Interactive Canvas Controls
+*   **Reposition Nodes**: Click and hold a node to drag it anywhere on the grid.
+*   **Resize Nodes**: Single-click any node to select it. A blue dotted boundary will appear with 8 square drag-handles. Click and drag any handle to scale the node boundaries.
+*   **Connect Nodes (Transitions)**: Hover your mouse over any node to reveal **blue anchor circles**. Click and drag from an anchor circle to any other node to draw a directional arrow (transition edge).
+*   **Context Hover Menu**: Hovering over a node reveals a floating tooltip with quick actions:
+    *   📝 **Edit**: Opens the properties panel.
+    *   🗑️ **Delete**: Instantly removes the node or connection.
+*   **Zoom Controls**: Use the subtract (`-`), add (`+`), or aspect-ratio buttons in the header to scale the canvas viewport.
+
+---
+
+### 3. Configuring Properties (Offcanvas Sidebar)
+
+Single-click any node or transition arrow to slide-open the **Properties Offcanvas Panel** from the right.
+
+#### 📝 Step Node Properties
+*   **Step Name**: The human-readable name of the step.
+*   **Machine Code**: The unique slug used to handle specific step transitions.
+*   **Description**: Description of the operational tasks expected at this step.
+*   **Workflow Action**: Select a registered workflow step hook (from `config/workflow.php`). This binds the step to a specific Blade form view and its backend `StepActionInterface` execution class.
+*   **Roles Authorization**: A checklist of role requirements. Only users carrying a checked role are authorized to view and execute this task from their Inbox.
+
+#### 🔗 Transition Line (Edge) Properties
+*   **Action Label**: Text displayed directly on the transition line (e.g. `Approve`, `Reject`, `Submit`).
+*   **Branch Type**:
+    *   `Default`: Standard progressive path.
+    *   `True Branch` / `False Branch`: The specific branches originating from a **Condition Node**.
+*   **Default Fallback (Toggle)**: Mark as fallback transition route if other conditional paths are not matched.
+
+#### ⚡ Condition Node Logic Builder
+For **Condition Nodes**, click the **Edit Logic** button in the properties panel to open the modal-based **Condition Logic Builder**:
+1. Click **Add Rule** to define evaluation statements.
+2. Select a registered field key (from `config/workflow_conditions.php`).
+3. Choose a logical operator (e.g., `is exactly`, `is not`, `>`, `<`, `is one of`, `contains`).
+4. Enter the matching value (displays a dropdown for `enum` keys and standard text/number/date inputs for others).
+5. Chain multiple rules using standard `AND` logic to build robust multi-variable gates.
+
+---
+
+### 4. Saving Your Workflow
+
+Once your graph design is complete:
+1. Ensure the layout connects all nodes logically from **Start** to **End**.
+2. Click **Save Workflow** in the top-right header.
+3. This persists the graph coordinates, step parameters, and transition pathways to the database (`steps` and `step_transitions` tables), making your changes live instantly for all new instances.
 
 ## Starting a Workflow
 
