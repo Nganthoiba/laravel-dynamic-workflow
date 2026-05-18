@@ -108,7 +108,7 @@ class WorkflowServiceProvider extends ServiceProvider
         |--------------------------------------------------------------------------
         */
         $this->publishes([
-            __DIR__ . '/../../public/logicflow' => public_path('vendor/logicflow'),
+            __DIR__ . '/../../public/vendor' => public_path('vendor'),
         ], 'workflow-assets');
 
         /*
