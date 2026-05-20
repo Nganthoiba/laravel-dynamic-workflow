@@ -7,7 +7,7 @@
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="card border-0 shadow-lg rounded-4">
                 <div class="card-header bg-white py-4 border-bottom-0">
                     <div class="d-flex align-items-center">
@@ -31,7 +31,7 @@
                                 <input type="text" 
                                        name="name" 
                                        id="name" 
-                                       class="form-control form-control-lg rounded-3 @error('name') is-invalid @enderror" 
+                                       class="form-control form-control-sm rounded-3 @error('name') is-invalid @enderror" 
                                        value="{{ old('name', $process->name) }}"
                                        required>
                                 @error('name')
@@ -44,12 +44,9 @@
                                 <input type="text" 
                                        name="code" 
                                        id="code" 
-                                       class="form-control form-control-lg rounded-3 @error('code') is-invalid @enderror" 
+                                       class="form-control form-control-sm rounded-3 bg-light" 
                                        value="{{ old('code', $process->code) }}"
-                                       required>
-                                @error('code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                       readonly disabled />
                             </div>
 
                             <div class="col-12">

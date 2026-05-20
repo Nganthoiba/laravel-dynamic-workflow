@@ -388,24 +388,27 @@
 <div class="modal fade" id="conditionBuilderModal" tabindex="-1" aria-labelledby="conditionBuilderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom bg-light">
-                <h5 class="modal-title fw-bold" id="conditionBuilderModalLabel">
-                    <i class="bi bi-diagram-3 text-primary me-2"></i>Condition Logic Builder
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body bg-light bg-opacity-50" style="max-height: 60vh; overflow-y: auto;">
-                <div id="builder-container">
-                    <!-- ConditionBuilder JS will render here -->
+            <form id="conditionForm" name="conditionForm" onsubmit="saveConditionFromBuilder(); return false;">
+                @csrf
+                <div class="modal-header border-bottom bg-light">
+                    <h5 class="modal-title fw-bold" id="conditionBuilderModalLabel">
+                        <i class="bi bi-diagram-3 text-primary me-2"></i>Condition Logic Builder
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer border-top bg-white">
-                <div class="me-auto small text-muted">
-                    <i class="bi bi-info-circle"></i> Conditions determine which branch the workflow takes.
+                <div class="modal-body bg-light bg-opacity-50" style="max-height: 60vh; overflow-y: auto;">
+                    <div id="builder-container">
+                        <!-- ConditionBuilder JS will render here -->
+                    </div>
                 </div>
-                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary px-4 rounded-pill" onclick="saveConditionFromBuilder()">Save Logic</button>
-            </div>
+                <div class="modal-footer border-top bg-white">
+                    <div class="me-auto small text-muted">
+                        <i class="bi bi-info-circle"></i> Conditions determine which branch the workflow takes.
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill" >Save Logic</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -420,6 +423,7 @@
 <script src="{{ asset('vendor/logicflow/SelectionSelect.js') }}"></script>
 <script>
     const process_id = "{{ $process->id }}";
+    // Initialize role mapping for canvas visualization
     const roleMap = {!! json_encode($roles->mapWithKeys(fn($role) => [$role->id => $role->display_name ?? $role->name])) !!};
     const { LogicFlow } = window;
     const Extension = window.LogicFlowExtension || window;
@@ -484,6 +488,7 @@
 
             const opSelect = document.createElement('select');
             opSelect.className = 'form-select form-select-sm w-auto';
+            opSelect.setAttribute("required", "true");
             
             const updateOpsAndValue = () => {
                 const fieldDef = conditionFields.find(f => f.key === fieldSelect.value) || conditionFields[0];
@@ -507,7 +512,13 @@
 
                 if (fieldDef.type === 'enum' && fieldDef.options_json) {
                     valInput = document.createElement('select');
-                    valInput.className = 'form-select form-select-sm val-input flex-grow-1';
+                    valInput.className = 'form-select form-select-sm val-input flex-grow-1';                   
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = "";
+                    defaultOpt.textContent = "Select Option";
+                    valInput.appendChild(defaultOpt);
+
                     fieldDef.options_json.forEach(o => {
                         const opt = document.createElement('option');
                         opt.value = o.value;
@@ -523,6 +534,7 @@
                     valInput.placeholder = 'Enter value...';
                 }
 
+                valInput.setAttribute("required", "true");
                 valInput.onchange = (e) => { item.value = e.target.value; updateSummaryPreview(); };
                 row.insertBefore(valInput, removeBtn);
             };
@@ -627,7 +639,7 @@
                         const roleNames = roles.map(id => roleMap[id] || id).join(', ') || 'No roles assigned';
                         const name = model.text.value || 'Step';
 
-                        // Truncate helper to ensure text stays within node boundaries
+                        // Truncate limit increased to 40 to accommodate long organizational titles
                         const truncate = (str, maxLen) => str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
 
                         return h('g', {}, [
@@ -642,7 +654,7 @@
                                 ry: radius,
                                 fill: '#ffffff'
                             }),
-                            // Header background (rounded top corners)
+                            // Header background
                             h('path', {
                                 d: `M ${x - width / 2} ${y - height / 2 + radius} 
                                     A ${radius} ${radius} 0 0 1 ${x - width / 2 + radius} ${y - height / 2}
@@ -654,7 +666,7 @@
                                 fill: '#eff6ff',
                                 stroke: 'none'
                             }),
-                            // Header-Body separator line
+                            // Header-Body separator
                             h('line', {
                                 x1: x - width / 2,
                                 y1: y - height / 2 + headerHeight,
@@ -672,7 +684,7 @@
                                 fill: '#1e40af',
                                 style: 'font-weight: bold; pointer-events: none;'
                             }, truncate(name, 40)),
-                            // "Assigned Roles" subtitle label
+                            // "Assigned Roles" label
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight + 18,
@@ -681,7 +693,7 @@
                                 fill: '#9ca3af',
                                 style: 'font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none;'
                             }, 'Assigned Roles'),
-                            // Dynamically mapped role list (Limit increased to 45)
+                            // Role List (Limit increased to 45)
                             h('text', {
                                 x: x,
                                 y: y - height / 2 + headerHeight + 38,
@@ -693,9 +705,8 @@
                         ]);
                     }
 
-                    // Suppress default text rendering to avoid conflict with our custom labels
                     getText() {
-                        return null;
+                        return null; // Suppress default text rendering
                     }
                 }
                 return { view: StepView, model: StepModel };
@@ -839,7 +850,7 @@
         const transform = lf.graphModel.transformModel;
         const scale = transform.SCALE_X || 1;
         const isEllipse = model.type === 'start' || model.type === 'end';
-        const hh = isEllipse ? (model.ry || 30) : (model.height || 90) / 2;
+        const hh = isEllipse ? (model.ry || 30) : (model.height || 70) / 2;
 
         const svgX = model.x * scale + transform.TRANSLATE_X;
         const svgY = (model.y - hh) * scale + transform.TRANSLATE_Y;
@@ -870,7 +881,7 @@
         hideNodeTooltip();
     }
 
-    function nodeActionDelete() {
+    async function nodeActionDelete() {
         const target = tooltipNodeData || selectedElement;
         if (!target) return;
         hideNodeTooltip();
@@ -878,6 +889,20 @@
         if (target.sourceNodeId) {
             lf.deleteEdge(target.id);
         } else {
+            if (target.type === 'step') {
+                try {
+                    const checkUrl = "{{ route('workflow-designer.steps.has-open-tasks', ':stepId') }}".replace(':stepId', target.id);
+                    const response = await fetch(checkUrl);
+                    const result = await response.json();
+                    if (result.has_open_tasks) {
+                        if (!confirm('Warning: This step has active/open tasks. Deleting it may disrupt existing workflows. Are you sure you want to proceed?')) {
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking open tasks:', error);
+                }
+            }
             lf.deleteNode(target.id);
         }
         closeSidebar();
@@ -924,8 +949,8 @@
 
         const { x, y } = model;
         const isEllipse = model.type === 'start' || model.type === 'end' || model.type === 'condition';
-        const hw = isEllipse ? (model.rx || 60) : (model.width || 180) / 2;
-        const hh = isEllipse ? (model.ry || 30) : (model.height || 90) / 2;
+        const hw = isEllipse ? (model.rx || 60) : (model.width || 140) / 2;
+        const hh = isEllipse ? (model.ry || 30) : (model.height || 70) / 2;
 
         const L = x - hw, R = x + hw, T = y - hh, B = y + hh, MX = x, MY = y;
 
@@ -975,8 +1000,8 @@
 
         const safeRx = (isFinite(model.rx) && model.rx > 0) ? model.rx : 60;
         const safeRy = (isFinite(model.ry) && model.ry > 0) ? model.ry : 30;
-        const safeW  = (isFinite(model.width)  && model.width  > 0) ? model.width  : 180;
-        const safeH  = (isFinite(model.height) && model.height > 0) ? model.height : 90;
+        const safeW  = (isFinite(model.width)  && model.width  > 0) ? model.width  : 140;
+        const safeH  = (isFinite(model.height) && model.height > 0) ? model.height : 70;
         const safeX  = isFinite(model.x) ? model.x : 0;
         const safeY  = isFinite(model.y) ? model.y : 0;
 
@@ -1048,11 +1073,25 @@
         }
     }
 
-    function deleteSelected() {
+    async function deleteSelected() {
         if (selectedElement) {
             if (selectedElement.sourceNodeId) {
                 lf.deleteEdge(selectedElement.id);
             } else {
+                if (selectedElement.type === 'step') {
+                    try {
+                        const checkUrl = "{{ route('workflow-designer.steps.has-open-tasks', ':stepId') }}".replace(':stepId', selectedElement.id);
+                        const response = await fetch(checkUrl);
+                        const result = await response.json();
+                        if (result.has_open_tasks) {
+                            if (!confirm('Warning: This step has active/open tasks. Deleting it may disrupt existing workflows. Are you sure you want to proceed?')) {
+                                return;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error checking open tasks:', error);
+                    }
+                }
                 lf.deleteNode(selectedElement.id);
             }
             closeSidebar();
@@ -1245,8 +1284,8 @@
                     currentWidth  = (nodeModel.rx || 60) * 2;
                     currentHeight = (nodeModel.ry || 30) * 2;
                 } else {
-                    currentWidth  = nodeModel.width  || 180;
-                    currentHeight = nodeModel.height || 90;
+                    currentWidth  = nodeModel.width  || 140;
+                    currentHeight = nodeModel.height || 60;
                 }
             }
 

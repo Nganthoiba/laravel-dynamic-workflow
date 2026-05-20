@@ -5,6 +5,7 @@ namespace Workflow\Http\Controllers;
 use Workflow\Models\Process;
 use Workflow\Models\Step;
 use Workflow\Models\StepTransition;
+use Workflow\Models\WorkflowInstanceStep;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,20 @@ class WorkflowDesignerController extends Controller
     }
 
     /**
+     * Check if a step has open tasks.
+     */
+    public function hasOpenTasks(string $stepId)
+    {
+        $hasOpenTasks = WorkflowInstanceStep::where('step_id', $stepId)
+            ->whereNull('completed_at')
+            ->exists();
+
+        return response()->json([
+            'has_open_tasks' => $hasOpenTasks
+        ]);
+    }
+
+    /**
      * Save/Update workflow graph.
      */
     public function save(Request $request)
@@ -137,6 +152,26 @@ class WorkflowDesignerController extends Controller
                         $step->roles()->sync($node['roles']);
                     }
                 }
+
+                //Before deleting steps, check if there are steps whose tasks are opening
+                // if 
+                // To be deleted steps
+                $unused_step_ids = Step::where('process_id', $processId)
+                    ->whereNotIn('id', $presentStepIds)
+                    ->pluck('id')
+                    ->toArray();
+
+                $hasOpenTasks = WorkflowInstanceStep::where('process_id', $processId)
+                    ->whereIn('step_id', $unused_step_ids)
+                    ->whereNull('completed_at')
+                    ->exists();
+
+                if($hasOpenTasks) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Cannot delete steps that have open tasks'
+                    ], 422);
+                }   
 
                 // Delete steps that are no longer in the graph for this process
                 Step::where('process_id', $processId)

@@ -14,6 +14,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/workflow-designer/{process}', [WorkflowDesignerController::class, 'show'])->name('workflow-designer.show');
     Route::post('/workflow-designer/save', [WorkflowDesignerController::class, 'save'])->name('workflow-designer.save');
     Route::post('/workflow-designer/update', [WorkflowDesignerController::class, 'update'])->name('workflow-designer.update');
+    Route::get('/workflow-designer/steps/{stepId}/has-open-tasks', [WorkflowDesignerController::class, 'hasOpenTasks'])->name('workflow-designer.steps.has-open-tasks');
 
     /** Workflow Conditions */
     Route::prefix('workflow-conditions')->group(function () {

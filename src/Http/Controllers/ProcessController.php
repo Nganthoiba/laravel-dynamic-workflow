@@ -107,16 +107,12 @@ class ProcessController extends Controller
 
             'name' => 'required|string|max:255',
 
-            'code' => "required|string|max:255|unique:processes,code,$process->id"
-
         ]);
 
 
         $process->update([
 
             'name' => $request->name,
-
-            'code' => $request->code,
 
             'description' => $request->description,
 
