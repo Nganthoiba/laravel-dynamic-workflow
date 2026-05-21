@@ -64,7 +64,6 @@
                         <th class="ps-4 py-3">Workflow Process</th>
                         <th class="py-3">Business Model</th>
                         <th class="py-3">Lifecycle Event</th>
-                        <th class="text-center py-3">Trigger Type</th>
                         <th class="text-center py-3">Priority</th>
                         <th class="text-center py-3">Status</th>
                         <th class="text-end pe-4 py-3">Actions</th>
@@ -99,19 +98,6 @@
                                 <span class="badge bg-light text-secondary border px-2 py-1.5 rounded fw-medium">
                                     {{ $registry->getEventLabel($binding->event_name) }}
                                 </span>
-                            </td>
-
-                            <!-- Trigger Type -->
-                            <td class="text-center py-3">
-                                @if($binding->trigger_type === 'auto')
-                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill fw-medium">
-                                        <i class="bi bi-lightning-charge-fill me-1"></i> Auto
-                                    </span>
-                                @else
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fw-medium">
-                                        <i class="bi bi-hand-index-thumb-fill me-1"></i> Manual
-                                    </span>
-                                @endif
                             </td>
 
                             <!-- Priority -->
@@ -159,7 +145,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-link-45deg display-1 text-light"></i>
                                     <h5 class="mt-3 text-muted">No Bindings Set Up</h5>

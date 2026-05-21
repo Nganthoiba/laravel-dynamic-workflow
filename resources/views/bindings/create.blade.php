@@ -46,6 +46,16 @@
                     <form method="POST" action="{{ route('workflow-bindings.store') }}">
                         @csrf
 
+                        <!-- Explaining Banner -->
+                        <div class="alert alert-info border-0 rounded-3 shadow-sm mb-4 px-4 py-3" role="alert">
+                            <div class="d-flex">
+                                <i class="bi bi-info-circle-fill fs-5 me-3 text-info"></i>
+                                <div>
+                                    <p class="mb-0 small text-dark-emphasis fw-medium">Create an automatic trigger for this workflow when the selected model event occurs. Manual workflows do not require binding configuration.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Validation Summary for specific custom errors -->
                         @if($errors->has('process_id') && count($errors->all()) > 0)
                             <div class="alert alert-danger border-0 rounded-3 small px-3 py-2 mb-4" role="alert">
@@ -103,19 +113,6 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <div class="form-text text-muted small">Choose the lifecycle action triggering the workflow.</div>
-                            </div>
-
-                            <!-- Trigger Type Selector -->
-                            <div class="col-12 col-md-6">
-                                <label for="trigger_type" class="form-label fw-bold small text-uppercase text-secondary">Trigger Type</label>
-                                <select name="trigger_type" id="trigger_type" class="form-select form-select-sm rounded-3 @error('trigger_type') is-invalid @enderror" required>
-                                    <option value="auto" {{ old('trigger_type', 'auto') === 'auto' ? 'selected' : '' }}>Automatic Trigger</option>
-                                    <option value="manual" {{ old('trigger_type') === 'manual' ? 'selected' : '' }}>Manual (API Only)</option>
-                                </select>
-                                @error('trigger_type')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text text-muted small">Automatic starts workflow on event. Manual relies on explicit code trigger.</div>
                             </div>
 
                             <!-- Priority Selector -->

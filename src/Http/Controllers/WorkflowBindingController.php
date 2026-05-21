@@ -83,7 +83,6 @@ class WorkflowBindingController extends Controller
                     }
                 },
             ],
-            'trigger_type' => 'required|in:auto,manual',
             'priority'     => 'required|integer|min:1',
         ]);
 
@@ -106,7 +105,6 @@ class WorkflowBindingController extends Controller
             'process_id'   => $request->process_id,
             'model_type'   => $modelClass,
             'event_name'   => $request->event_name,
-            'trigger_type' => $request->trigger_type,
             'priority'     => $request->priority,
             'is_active'    => $request->boolean('is_active', true),
         ]);
@@ -163,7 +161,6 @@ class WorkflowBindingController extends Controller
                     }
                 },
             ],
-            'trigger_type' => 'required|in:auto,manual',
             'priority'     => 'required|integer|min:1',
         ]);
 
@@ -187,7 +184,6 @@ class WorkflowBindingController extends Controller
             'process_id'   => $request->process_id,
             'model_type'   => $modelClass,
             'event_name'   => $request->event_name,
-            'trigger_type' => $request->trigger_type,
             'priority'     => $request->priority,
             'is_active'    => $request->boolean('is_active', false),
         ]);

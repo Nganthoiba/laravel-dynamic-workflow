@@ -38,10 +38,6 @@ return new class extends Migration
             $table->string('event_name')
                 ->comment('Name of the model event that triggers this workflow (e.g. created, updated)');
 
-            $table->string('trigger_type', 20)
-                ->default('auto')
-                ->comment('Trigger type: auto or manual');
-
             $table->integer('priority')
                 ->default(0)
                 ->comment('Priority of the trigger for conflict resolution');

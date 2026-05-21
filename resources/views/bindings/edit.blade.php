@@ -103,19 +103,6 @@
                                 <div class="form-text text-muted small">Choose the lifecycle action triggering the workflow.</div>
                             </div>
 
-                            <!-- Trigger Type Selector -->
-                            <div class="col-12 col-md-6">
-                                <label for="trigger_type" class="form-label fw-bold small text-uppercase text-secondary">Trigger Type</label>
-                                <select name="trigger_type" id="trigger_type" class="form-select form-select-sm rounded-3 @error('trigger_type') is-invalid @enderror" required>
-                                    <option value="auto" {{ old('trigger_type', $binding->trigger_type) === 'auto' ? 'selected' : '' }}>Automatic Trigger</option>
-                                    <option value="manual" {{ old('trigger_type', $binding->trigger_type) === 'manual' ? 'selected' : '' }}>Manual (API Only)</option>
-                                </select>
-                                @error('trigger_type')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text text-muted small">Automatic starts workflow on event. Manual relies on explicit code trigger.</div>
-                            </div>
-
                             <!-- Priority Selector -->
                             <div class="col-12 col-md-6">
                                 <label for="priority" class="form-label fw-bold small text-uppercase text-secondary">Evaluation Priority</label>

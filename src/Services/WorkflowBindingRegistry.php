@@ -27,7 +27,7 @@ class WorkflowBindingRegistry
      */
     public function getModels(): array
     {
-        $models = config('workflow_models.models', []);
+        $models = config('workflow.workflow_models', []);
         $result = [];
 
         foreach ($models as $key => $config) {
@@ -44,7 +44,7 @@ class WorkflowBindingRegistry
      */
     public function getEvents(): array
     {
-        return config('workflow_models.events', [
+        return config('workflow.workflow_events', [
             'created'   => 'Created',
             'updated'   => 'Updated',
             'submitted' => 'Submitted',
@@ -62,7 +62,7 @@ class WorkflowBindingRegistry
      */
     public function getModelLabel(string $class): string
     {
-        $models = config('workflow_models.models', []);
+        $models = config('workflow.workflow_models', []);
 
         foreach ($models as $config) {
             if (isset($config['class']) && ltrim($config['class'], '\\') === ltrim($class, '\\')) {
@@ -94,7 +94,7 @@ class WorkflowBindingRegistry
      */
     public function getModelClass(string $key): ?string
     {
-        return config("workflow_models.models.{$key}.class");
+        return config("workflow.workflow_models.{$key}.class");
     }
 
     /**
@@ -105,7 +105,7 @@ class WorkflowBindingRegistry
      */
     public function getModelKey(string $class): ?string
     {
-        $models = config('workflow_models.models', []);
+        $models = config('workflow.workflow_models', []);
 
         foreach ($models as $key => $config) {
             if (isset($config['class']) && ltrim($config['class'], '\\') === ltrim($class, '\\')) {
@@ -124,7 +124,7 @@ class WorkflowBindingRegistry
      */
     public function isModelAllowed(string $value): bool
     {
-        $models = config('workflow_models.models', []);
+        $models = config('workflow.workflow_models', []);
 
         if (array_key_exists($value, $models)) {
             return true;

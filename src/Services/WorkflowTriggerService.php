@@ -54,24 +54,26 @@ class WorkflowTriggerService
         $highestPriority = $bindings->first()->priority;
         $matchedBindings = $bindings->filter(fn($binding) => $binding->priority === $highestPriority);
 
-        // 3. For each resolved binding, check if trigger_type is auto and start workflow
+        // 3. For each resolved binding, start workflow automatically
         foreach ($matchedBindings as $binding) {
-            if ($binding->trigger_type === 'auto') {
-                $process = $binding->process;
-                if (!$process || !$process->is_active) {
-                    continue;
-                }
+            $process = $binding->process;
+            if (!$process || !$process->is_active) {
+                continue;
+            }
 
-                // Avoid duplicating running instances of the same process for this model
-                $alreadyExists = WorkflowInstance::where('process_id', $process->id)
-                    ->where('reference_type', get_class($model))
-                    ->where('reference_id', $model->getKey())
-                    ->where('status', 'IN_PROGRESS')
-                    ->exists();
+            // Avoid duplicating running instances of the same process for this model
+            $alreadyExists = WorkflowInstance::where('process_id', $process->id)
+                ->where('reference_type', get_class($model))
+                ->where('reference_id', $model->getKey())
+                ->where('status', 'IN_PROGRESS')
+                ->exists();
 
-                if (!$alreadyExists) {
-                    $this->workflowInstanceService->start($process, $model);
-                }
+            if (!$alreadyExists) {
+                $context = request()->all() ?? [];
+                $context['comment'] = "{$process->name} initiated successfully.";
+                $context['action_result'] = 'initiated';
+                $workflowInstance = $this->workflowInstanceService->start($process, $model, $context);
+                $this->workflowInstanceService->proceed($workflowInstance, $context);
             }
         }
     }

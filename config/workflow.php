@@ -2,6 +2,51 @@
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Workflow Models Registry
+    |--------------------------------------------------------------------------
+    |
+    | Define the allowed business models that can be bound to workflows.
+    | Keys are short, friendly identifiers used in form values.
+    | Values contain:
+    |   - 'label': Friendly display name for the user interface dropdown.
+    |   - 'class': The Fully Qualified Class Name of the model.
+    |
+    */
+    'workflow_models' => [
+        'purchase_order' => [
+            'label' => 'Purchase Order',
+            'class' => 'App\\Models\\PurchaseOrder',
+        ],
+        'dispatch' => [
+            'label' => 'Dispatch',
+            'class' => 'App\\Models\\Dispatch',
+        ],
+        'breakage_report' => [
+            'label' => 'Breakage Report',
+            'class' => 'App\\Models\\BreakageReport',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Workflow Events Registry
+    |--------------------------------------------------------------------------
+    |
+    | List of model lifecycle or business events that can trigger a workflow.
+    | Keys are stored in the database, and values are friendly UI labels.
+    |
+    */
+    'workflow_events' => [
+        'created'   => 'Created',
+        'updated'   => 'Updated',
+        'submitted' => 'Submitted',
+        'approved'  => 'Approved',
+        'rejected'  => 'Rejected',
+        'cancelled' => 'Cancelled',
+    ],
+
     'workflow_actions' => [
 
         'submit_form' => [

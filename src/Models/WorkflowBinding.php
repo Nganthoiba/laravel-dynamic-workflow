@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Model;
  *     'process_id'   => $processId,
  *     'model_type'   => 'App\Models\Order',
  *     'event_name'   => 'created', // 'created', 'updated', etc.
- *     'trigger_type' => 'auto',
  *     'priority'     => 0,
  *     'is_active'    => true,
  * ]);
@@ -29,7 +28,6 @@ class WorkflowBinding extends Model
         'process_id',
         'model_type',
         'event_name',
-        'trigger_type',
         'priority',
         'is_active',
     ];

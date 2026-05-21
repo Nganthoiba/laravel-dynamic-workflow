@@ -297,6 +297,26 @@ php artisan migrate
 Update `config/workflow.php`:
 
 ```php
+// Define the allowed business models that can be bound to automatic triggers
+'workflow_models' => [
+    'purchase_order' => [
+        'label' => 'Purchase Order',
+        'class' => \App\Models\PurchaseOrder::class,
+    ],
+    'dispatch' => [
+        'label' => 'Dispatch',
+        'class' => \App\Models\Dispatch::class,
+    ],
+],
+
+// List the supported model events for automatic triggering
+'workflow_events' => [
+    'created'   => 'Created',
+    'updated'   => 'Updated',
+    'submitted' => 'Submitted',
+],
+
+// Define the identity system models used by the host application for Users and Roles
 'models' => [
     'role' => \App\Models\Role::class,
     'user' => \App\Models\User::class,
@@ -566,7 +586,6 @@ Database bindings are registered in the `workflow_bindings` table:
 - `process_id`: The workflow process (`processes.id`) to execute.
 - `model_type`: Fully-qualified class name of the target Eloquent model (e.g. `App\Models\PurchaseOrder`).
 - `event_name`: The model event that fires the trigger (e.g. `created`, `updated`).
-- `trigger_type`: Set to `auto` for automatic workflow start, or `manual` for explicit triggers.
 - `priority`: Conflict resolution priority. If multiple bindings match the model event, the highest priority is resolved first.
 - `is_active`: Controls whether this binding is enabled.
 
