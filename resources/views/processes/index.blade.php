@@ -29,9 +29,14 @@
             <h4 class="fw-bold mb-0">Workflow Management</h4>
             <p class="text-muted small mb-0">Design and manage your business processes</p>
         </div>
-        <a href="{{ route('workflow.processes.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="bi bi-plus-lg me-2"></i> Create New Process
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('workflow-bindings.index') }}" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-link me-2"></i> Workflow Bindings
+            </a>
+            <a href="{{ route('workflow.processes.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i> Create New Process
+            </a>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">

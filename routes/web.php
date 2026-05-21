@@ -7,8 +7,12 @@ use Workflow\Http\Controllers\WorkflowController;
 use Workflow\Http\Controllers\ProcessController;
 use Workflow\Http\Controllers\StepController;
 use Workflow\Http\Controllers\StepTransitionController;
+use Workflow\Http\Controllers\WorkflowBindingController;
 
 Route::middleware(['web', 'auth'])->group(function () {
+    /** Workflow Bindings */
+    Route::post('/workflow-bindings/{id}/toggle', [WorkflowBindingController::class, 'toggleActive'])->name('workflow-bindings.toggle');
+    Route::resource('workflow-bindings', WorkflowBindingController::class);
     /** Workflow Designer */
     Route::get('/workflow-designer/load/{processId}', [WorkflowDesignerController::class, 'load'])->name('workflow-designer.load');
     Route::get('/workflow-designer/{process}', [WorkflowDesignerController::class, 'show'])->name('workflow-designer.show');

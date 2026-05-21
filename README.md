@@ -536,6 +536,10 @@ Once your graph design is complete:
 
 ## Starting a Workflow
 
+### Manual Mode
+
+You can start a workflow manually from your application code by calling the `WorkflowInstanceService` directly:
+
 ```php
 use Workflow\Models\Process;
 use Workflow\Services\WorkflowInstanceService;
@@ -549,6 +553,77 @@ $instance = $service->start($process, $order);
 // If you are inside a controller, get context from request
 $context = $request->all(); // Or just an empty array if there is nothing to pass
 $service->proceed($instance, $context);
+```
+
+### Automatic Binding Mode
+
+The package also supports dynamic, database-driven automatic workflow triggers bound to Eloquent model events. When configured, workflows start automatically when the model fires events (such as `created`, `updated`, `saved`) without needing to write per-process manual code.
+
+#### 1. Database Configuration (`workflow_bindings` table)
+
+Database bindings are registered in the `workflow_bindings` table:
+
+- `process_id`: The workflow process (`processes.id`) to execute.
+- `model_type`: Fully-qualified class name of the target Eloquent model (e.g. `App\Models\PurchaseOrder`).
+- `event_name`: The model event that fires the trigger (e.g. `created`, `updated`).
+- `trigger_type`: Set to `auto` for automatic workflow start, or `manual` for explicit triggers.
+- `priority`: Conflict resolution priority. If multiple bindings match the model event, the highest priority is resolved first.
+- `is_active`: Controls whether this binding is enabled.
+
+#### 2. Model Event Integration
+
+To listen to model events automatically, you can use the **Trait-based** approach or the **Observer-based** approach:
+
+##### A. Trait-Based Approach
+Add the `Workflow\Traits\Workflowable` trait to your Eloquent model:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Workflow\Traits\Workflowable;
+
+class PurchaseOrder extends Model
+{
+    use Workflowable;
+}
+```
+
+By default, this registers listeners for the `created` and `updated` events. You can customize the events to monitor on a per-model basis by defining a static `workflowEvents` method:
+
+```php
+public static function workflowEvents(): array
+{
+    return ['created', 'saved', 'submitted'];
+}
+```
+
+##### B. Observer-Based Approach
+Alternatively, you can register the package's reusable observer `Workflow\Observers\WorkflowObserver` in your application's Service Provider:
+
+```php
+use App\Models\PurchaseOrder;
+use Workflow\Observers\WorkflowObserver;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        PurchaseOrder::observe(WorkflowObserver::class);
+    }
+}
+```
+
+#### 3. Manual / Custom Event Dispatching
+
+If you need to fire custom, non-standard workflow triggers from application controller/logic, you can manually trigger events on your model:
+
+```php
+// If using the Workflowable trait:
+$order->triggerWorkflow('submitted');
+
+// Or using the WorkflowTriggerService directly:
+app(Workflow\Services\WorkflowTriggerService::class)->trigger($order, 'submitted');
 ```
 
 ## Workflow Inbox

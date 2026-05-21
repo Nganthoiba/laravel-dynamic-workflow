@@ -25,6 +25,21 @@ class WorkflowServiceProvider extends ServiceProvider
             __DIR__ . '/../../config/workflow_conditions.php',
             'workflow_conditions'
         );
+
+        $this->mergeConfigFrom(
+            __DIR__ . '/../../config/workflow_models.php',
+            'workflow_models'
+        );
+
+        $this->app->singleton(\Workflow\Services\WorkflowBindingRegistry::class, function ($app) {
+            return new \Workflow\Services\WorkflowBindingRegistry();
+        });
+
+        $this->app->singleton(\Workflow\Services\WorkflowTriggerService::class, function ($app) {
+            return new \Workflow\Services\WorkflowTriggerService(
+                $app->make(\Workflow\Services\WorkflowInstanceService::class)
+            );
+        });
     }
 
     /**
@@ -72,6 +87,10 @@ class WorkflowServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/workflow.php' => config_path('workflow.php'),
         ], 'workflow-config');
+
+        $this->publishes([
+            __DIR__ . '/../../config/workflow_models.php' => config_path('workflow_models.php'),
+        ], 'workflow-models-config');
 
         /*
         |--------------------------------------------------------------------------

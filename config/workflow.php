@@ -68,4 +68,19 @@ return [
         'role' => \App\Models\Role::class,
         'user' => \App\Models\User::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Automatic Workflow Binding Config
+    |--------------------------------------------------------------------------
+    |
+    | Configuration options for the automatic binding and trigger system.
+    |
+    */
+
+    // Default model events that trigger workflows when using the Workflowable trait
+    'trigger_events' => [
+        'created',
+        'updated',
+    ],
 ];
