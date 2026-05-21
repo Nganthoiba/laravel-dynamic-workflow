@@ -9,6 +9,7 @@ use Workflow\Models\WorkflowInstanceStep;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 
 class WorkflowDesignerController extends Controller
@@ -68,7 +69,7 @@ class WorkflowDesignerController extends Controller
             }
         }
 
-        return response()->json([
+        return Response::json([
             'process_id' => $process->id,
             'canvas_state' => $process->canvas_state,
             'graph_json' => $process->graph_json,
@@ -82,12 +83,15 @@ class WorkflowDesignerController extends Controller
      */
     public function hasOpenTasks(string $stepId)
     {
-        $hasOpenTasks = WorkflowInstanceStep::where('step_id', $stepId)
+        $step = Step::find($stepId);
+        $stepName = $step ? $step->name : 'Unknown';
+        $taskCount = WorkflowInstanceStep::where('step_id', $stepId)
             ->whereNull('completed_at')
-            ->exists();
-
-        return response()->json([
-            'has_open_tasks' => $hasOpenTasks
+            ->count();
+        return Response::json([
+            'has_open_tasks' => $taskCount > 0,
+            'step_name' => $stepName,
+            'task_count' => $taskCount
         ]);
     }
 
@@ -167,7 +171,7 @@ class WorkflowDesignerController extends Controller
                     ->exists();
 
                 if($hasOpenTasks) {
-                    return response()->json([
+                    return Response::json([
                         'status' => 'error',
                         'message' => 'Cannot delete steps that have open tasks'
                     ], 422);
@@ -202,13 +206,13 @@ class WorkflowDesignerController extends Controller
                 // 3. Validation
                 $this->validateWorkflowStructure($processId);
 
-                return response()->json([
+                return Response::json([
                     'status' => 'success',
                     'message' => 'Workflow graph saved successfully'
                 ]);
             });
         } catch (\Exception $e) {
-            return response()->json([
+            return Response::json([
                 'status' => 'error',
                 'message' => $e->getMessage()
             ], 422);

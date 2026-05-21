@@ -5,6 +5,7 @@ namespace Workflow\Http\Controllers;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
 class ConditionController extends Controller
@@ -12,13 +13,13 @@ class ConditionController extends Controller
     public function getFields()
     {
         $fields = config('workflow_conditions.fields', []);
-        return response()->json($fields);
+        return Response::json($fields);
     }
 
     public function getTemplates()
     {
         $templates = config('workflow_conditions.templates', []);
-        return response()->json($templates);
+        return Response::json($templates);
     }
 
     public function validateCondition(Request $request)
@@ -26,7 +27,7 @@ class ConditionController extends Controller
         $condition = $request->input('condition_json');
 
         if (!is_array($condition)) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid condition structure'], 400);
+            return Response::json(['status' => 'error', 'message' => 'Invalid condition structure'], 400);
         }
 
         $fieldsConfig = config('workflow_conditions.fields', []);
@@ -39,10 +40,10 @@ class ConditionController extends Controller
         $this->validateNode($condition, $fieldsDict, $errors);
 
         if (!empty($errors)) {
-            return response()->json(['status' => 'error', 'errors' => $errors], 422);
+            return Response::json(['status' => 'error', 'errors' => $errors], 422);
         }
 
-        return response()->json(['status' => 'success']);
+        return Response::json(['status' => 'success']);
     }
 
     protected function validateNode($node, $fieldsDict, &$errors)
