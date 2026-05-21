@@ -1,0 +1,132 @@
+:root {
+        --lf-primary: #3b82f6;
+        --lf-success: #10b981;
+        --lf-danger: #ef4444;
+        --lf-warning: #f59e0b;
+        --sidebar-width: 300px;
+    }
+
+    ellipse {
+        border: 1px solid #999 !important;
+    }
+
+    #workflow-container {
+        height: calc(100vh - 160px);
+        background: #fdfdfd;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #lf-container {
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
+    }
+
+    /* LogicFlow overrides for Lucidchart look */
+    .lf-node-step rect { fill: #fff; stroke: var(--lf-primary); stroke-width: 2px; }
+    .lf-node-start ellipse { fill: #fff; stroke: var(--lf-success); stroke-width: 2px; }
+    .lf-node-end ellipse { fill: #fff; stroke: var(--lf-danger); stroke-width: 2px; }
+    .lf-node-condition polygon { fill: #fffbeb; stroke: var(--lf-warning); stroke-width: 2px; }
+
+    /* Dotted rectangular guide when node is selected (for resizing) */
+    .lf-resize-control rect,
+    .lf-outline rect {
+        stroke-dasharray: 5, 3 !important;
+        stroke: var(--lf-primary) !important;
+        stroke-width: 1.5px !important;
+        fill: none !important;
+        rx: 4px !important;
+    }
+
+    /* Resize handle dots — visible square anchors at corners/edges */
+    .lf-resize-control > g {
+        cursor: nwse-resize !important;
+    }
+    .lf-resize-control polygon,
+    .lf-resize-control rect:not(:first-child) {
+        fill: var(--lf-primary) !important;
+        stroke: #fff !important;
+        stroke-width: 1.5px !important;
+    }
+
+    /* Subtle hover ring on node shapes so user knows they can click */
+    .lf-node-step:hover rect,
+    .lf-node-start:hover ellipse,
+    .lf-node-end:hover ellipse {
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+        cursor: move !important;
+    }
+
+    /* Drag cursor for all node elements inside LogicFlow */
+    .lf-node, .lf-node * {
+        cursor: move !important;
+    }
+    .lf-node:active, .lf-node *:active {
+        cursor: grabbing !important;
+    }
+
+    /* Floating node action tooltip (Edit / Delete) */
+    #node-action-tooltip {
+        position: absolute;
+        z-index: 2000;
+        display: none;
+        pointer-events: auto;
+        transform: translateX(-50%);
+        transition: opacity 0.15s ease;
+    }
+
+    #node-action-tooltip .btn-group .btn {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    #node-action-tooltip .btn-group .btn:first-child { border-radius: 4px 0 0 4px; }
+    #node-action-tooltip .btn-group .btn:last-child  { border-radius: 0 4px 4px 0; }
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* Toolbox */
+    .toolbox-item {
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .toolbox-item:hover {
+        border-color: var(--lf-primary);
+        background: #f0f9ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .tool-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .diamond-icon { width: 18px; height: 18px; border: 2px solid currentColor; transform: rotate(45deg); }
