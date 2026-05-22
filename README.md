@@ -554,6 +554,26 @@ Once your graph design is complete:
 2. Click **Save Workflow** in the top-right header.
 3. This persists the graph coordinates, step parameters, and transition pathways to the database (`steps` and `step_transitions` tables), making your changes live instantly for all new instances.
 
+---
+
+### 5. Binding Workflows to Model Events (UI)
+
+Instead of hardcoding triggers in your application logic, the package provides an **Event Triggers** dashboard (`/workflow-bindings`) where administrators can visually map Eloquent model events to specific workflow processes.
+
+#### Creating a New Binding
+1. Navigate to `/workflow-bindings` and click **Create Binding** (or equivalent button).
+2. **Target Process**: Select the active workflow process you want to trigger (e.g., `Purchase Order Approval`).
+3. **Business Model**: Select the entity model (e.g., `Purchase Order`). *Models are populated from the `workflow_models` configuration in `config/workflow.php`.*
+4. **Trigger Event**: Select the event that should trigger the workflow (e.g., `created`, `updated`, `submitted`). *Events are populated from `workflow_events` configuration.*
+5. **Priority Level**: Assign a numerical priority. If multiple active bindings match the same model and event, the engine will execute the one with the highest priority first.
+6. **Status**: Toggle whether the binding is active.
+
+#### Managing Existing Bindings
+- **Toggle Status**: Use the quick toggle button on the list to activate or deactivate triggers instantly.
+- **Edit/Delete**: Update binding rules or remove obsolete triggers without touching the application code.
+
+By combining the visual designer with UI-driven bindings, non-technical administrators can control the complete lifecycle—from how a workflow executes to exactly when it starts.
+
 ## Starting a Workflow
 
 ### Manual Mode
