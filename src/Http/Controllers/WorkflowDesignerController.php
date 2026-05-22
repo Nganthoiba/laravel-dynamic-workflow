@@ -22,10 +22,10 @@ class WorkflowDesignerController extends Controller
         // Fetch roles using the configured model
         $roleModel = config('workflow.models.role');
         $roles = class_exists($roleModel) ? $roleModel::all() : collect([]);
-        
+
         $workflowActions = config('workflow.workflow_actions', []);
         $title = 'Workflow Designer';
-        
+
         return view(
             'workflow::designer',
             compact('process', 'roles', 'title', 'workflowActions')
@@ -130,7 +130,7 @@ class WorkflowDesignerController extends Controller
                 }
 
                 $presentStepIds = [];
-                
+
                 // 1. Process Nodes (Steps)
                 foreach ($nodes as $node) {
                     $stepId = $node['id'];
@@ -170,12 +170,12 @@ class WorkflowDesignerController extends Controller
                     ->whereNull('completed_at')
                     ->exists();
 
-                if($hasOpenTasks) {
+                if ($hasOpenTasks) {
                     return Response::json([
                         'status' => 'error',
                         'message' => 'Cannot delete steps that have open tasks'
                     ], 422);
-                }   
+                }
 
                 // Delete steps that are no longer in the graph for this process
                 Step::where('process_id', $processId)
@@ -248,6 +248,18 @@ class WorkflowDesignerController extends Controller
 
         if ($stepsWithMultipleDefaults->isNotEmpty()) {
             throw new \Exception("A step cannot have more than one default transition.");
+        }
+
+        // Rule 3: Conditional nodes must have at least one condition logic item
+        $conditionSteps = Step::where('process_id', $processId)->where('node_type', 'condition')->get();
+        foreach ($conditionSteps as $step) {
+            $condition = $step->condition_json;
+            if (is_string($condition)) {
+                $condition = json_decode($condition, true);
+            }
+            if (empty($condition) || !is_array($condition) || empty($condition['AND']) || !is_array($condition['AND']) || count($condition['AND']) === 0) {
+                throw new \Exception("Validation Error: Condition node \"{$step->name}\" must have at least one condition logic defined.");
+            }
         }
     }
 }

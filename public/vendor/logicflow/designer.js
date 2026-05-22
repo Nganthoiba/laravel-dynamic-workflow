@@ -1094,6 +1094,24 @@ async function saveWorkflow() {
 
     const conditionNodes = graphData.nodes.filter(n => n.type === 'condition');
     for (const cond of conditionNodes) {
+        const condition = cond.properties ? cond.properties.condition : null;
+        let hasLogic = false;
+        if (condition) {
+            let data = condition;
+            if (typeof condition === 'string') {
+                try {
+                    data = JSON.parse(condition);
+                } catch (e) {}
+            }
+            if (data && Array.isArray(data.AND) && data.AND.length > 0) {
+                hasLogic = true;
+            }
+        }
+        if (!hasLogic) {
+            alert(`Validation Error: Condition node "${cond.text?.value || 'Condition'}" must have at least one condition logic defined.`);
+            return;
+        }
+
         const outgoing = edges.filter(e => e.from === cond.id);
         if (outgoing.length !== 2) {
             alert(`Validation Error: Condition node "${cond.text?.value || 'Condition'}" must have exactly 2 outgoing branches (currently has ${outgoing.length}).`);
