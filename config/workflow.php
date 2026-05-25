@@ -128,4 +128,19 @@ return [
         'created',
         'updated',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Define configuration for the routes registered by the package.
+    | - 'enabled': Whether package routes should be automatically registered.
+    | - 'middleware': The middleware applied to the package routes.
+    |
+    */
+    'routes' => [
+        'enabled' => true,
+        'middleware' => ['web', 'auth'],
+    ],
 ];

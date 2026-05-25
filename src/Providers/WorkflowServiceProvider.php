@@ -56,9 +56,11 @@ class WorkflowServiceProvider extends ServiceProvider
         | Load Routes
         |--------------------------------------------------------------------------
         */
-        $this->loadRoutesFrom(
-            __DIR__ . '/../../routes/web.php'
-        );
+        if (config('workflow.routes.enabled', true)) {
+            $this->loadRoutesFrom(
+                __DIR__ . '/../../routes/web.php'
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------

@@ -9,7 +9,7 @@ use Workflow\Http\Controllers\StepController;
 use Workflow\Http\Controllers\StepTransitionController;
 use Workflow\Http\Controllers\WorkflowBindingController;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(config('workflow.routes.middleware', ['web', 'auth']))->group(function () {
     /** Workflow Bindings */
     Route::post('/workflow-bindings/{id}/toggle', [WorkflowBindingController::class, 'toggleActive'])->name('workflow-bindings.toggle');
     Route::resource('workflow-bindings', WorkflowBindingController::class);

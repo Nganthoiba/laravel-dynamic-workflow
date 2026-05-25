@@ -179,7 +179,6 @@ function renderConditionBuilder() {
     container.appendChild(addBtn);
 }
 
-// Retain all functions to maintain full backwards and forwards compatibility
 function getFlatSummary(data) {
     if (!data || !data.AND || data.AND.length === 0) return 'No conditions set.';
     const parts = data.AND.map(item => {
@@ -194,12 +193,14 @@ function getFlatSummary(data) {
             'in': 'in',
             'contains': 'contains'
         };
-        return `[${field}] ${opLabels[item.operator] || item.operator} "${item.value}"`;
+        const options_json = conditionFields.find(f => f.key === item.field)?.options_json || [];
+        const option_label = options_json.find(k => k.value + "" === item.value + "")?.label || item.value;
+        return `[${field}] ${opLabels[item.operator] || item.operator} "${option_label}"`;
     });
     return parts.join(' AND ');
 }
 
-function updateSummaryPreview() {}
+function updateSummaryPreview() { }
 
 function initLogicFlow() {
     try {
@@ -796,7 +797,7 @@ async function deleteSelected() {
 
 let propertiesOffcanvas;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const offcanvasEl = document.getElementById('propertiesOffcanvas');
     if (offcanvasEl) {
         propertiesOffcanvas = new bootstrap.Offcanvas(offcanvasEl, {
@@ -1094,24 +1095,6 @@ async function saveWorkflow() {
 
     const conditionNodes = graphData.nodes.filter(n => n.type === 'condition');
     for (const cond of conditionNodes) {
-        const condition = cond.properties ? cond.properties.condition : null;
-        let hasLogic = false;
-        if (condition) {
-            let data = condition;
-            if (typeof condition === 'string') {
-                try {
-                    data = JSON.parse(condition);
-                } catch (e) {}
-            }
-            if (data && Array.isArray(data.AND) && data.AND.length > 0) {
-                hasLogic = true;
-            }
-        }
-        if (!hasLogic) {
-            alert(`Validation Error: Condition node "${cond.text?.value || 'Condition'}" must have at least one condition logic defined.`);
-            return;
-        }
-
         const outgoing = edges.filter(e => e.from === cond.id);
         if (outgoing.length !== 2) {
             alert(`Validation Error: Condition node "${cond.text?.value || 'Condition'}" must have exactly 2 outgoing branches (currently has ${outgoing.length}).`);
@@ -1189,7 +1172,7 @@ async function loadWorkflow() {
                                 if (dbNode.ui_json) {
                                     try {
                                         uiJson = typeof dbNode.ui_json === 'string' ? JSON.parse(dbNode.ui_json) : dbNode.ui_json;
-                                    } catch (e) {}
+                                    } catch (e) { }
                                 }
                                 if (uiJson) {
                                     if (!gn.rx && uiJson.rx) gn.rx = uiJson.rx;
@@ -1213,7 +1196,7 @@ async function loadWorkflow() {
                         if (n.ui_json) {
                             try {
                                 uiJson = typeof n.ui_json === 'string' ? JSON.parse(n.ui_json) : n.ui_json;
-                            } catch (e) {}
+                            } catch (e) { }
                         }
 
                         const nodeType = n.node_type || (n.is_start ? 'start' : (n.is_end ? 'end' : 'step'));
