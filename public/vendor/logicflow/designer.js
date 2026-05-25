@@ -14,9 +14,8 @@ const Control = Extension.Control;
 
 let lf;
 let conditionFields = [];
-let currentConditionData = {
-    AND: []
-};
+let currentConditionLogic = 'AND';
+let currentConditionRules = [];
 
 async function fetchConditionFields() {
     try {
@@ -31,10 +30,27 @@ function renderConditionBuilder() {
     const container = document.getElementById('builder-container');
     container.innerHTML = '';
 
+    const logicDiv = document.createElement('div');
+    logicDiv.className = 'mb-3 p-3 bg-white border rounded shadow-sm d-flex align-items-center gap-3';
+    logicDiv.innerHTML = `
+        <label class="fw-bold text-muted small text-uppercase mb-0">Evaluate Logic:</label>
+        <select class="form-select form-select-sm w-auto" id="logic-selector">
+            <option value="AND" ${currentConditionLogic === 'AND' ? 'selected' : ''}>Match ALL of the following (AND)</option>
+            <option value="OR" ${currentConditionLogic === 'OR' ? 'selected' : ''}>Match ANY of the following (OR)</option>
+        </select>
+    `;
+    container.appendChild(logicDiv);
+
+    logicDiv.querySelector('#logic-selector').onchange = (e) => {
+        currentConditionLogic = e.target.value;
+        renderConditionBuilder();
+        updateSummaryPreview();
+    };
+
     const listDiv = document.createElement('div');
     listDiv.className = 'd-flex flex-column gap-2 mb-3';
 
-    let items = currentConditionData.AND || [];
+    let items = currentConditionRules || [];
     if (!Array.isArray(items)) items = [];
 
     if (items.length === 0) {
@@ -46,10 +62,10 @@ function renderConditionBuilder() {
         row.className = 'd-flex align-items-center gap-2 p-2 bg-white border rounded shadow-sm';
 
         if (index > 0) {
-            const andBadge = document.createElement('span');
-            andBadge.className = 'badge bg-secondary';
-            andBadge.textContent = 'AND';
-            row.appendChild(andBadge);
+            const badge = document.createElement('span');
+            badge.className = currentConditionLogic === 'AND' ? 'badge bg-secondary' : 'badge bg-warning text-dark';
+            badge.textContent = currentConditionLogic;
+            row.appendChild(badge);
         } else {
             const whereBadge = document.createElement('span');
             whereBadge.className = 'badge bg-primary';
@@ -166,9 +182,9 @@ function renderConditionBuilder() {
     addBtn.className = 'btn btn-sm btn-outline-primary rounded-pill px-3';
     addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add Rule';
     addBtn.onclick = () => {
-        if (!currentConditionData.AND) currentConditionData.AND = [];
+        if (!currentConditionRules) currentConditionRules = [];
         const defaultField = conditionFields[0];
-        currentConditionData.AND.push({
+        currentConditionRules.push({
             field: defaultField ? defaultField.key : '',
             operator: defaultField && defaultField.operators_json ? defaultField.operators_json[0] : '=',
             value: ''
@@ -180,8 +196,14 @@ function renderConditionBuilder() {
 }
 
 function getFlatSummary(data) {
-    if (!data || !data.AND || data.AND.length === 0) return 'No conditions set.';
-    const parts = data.AND.map(item => {
+    let logic = 'AND';
+    let rules = [];
+    if (data && data.OR) { logic = 'OR'; rules = data.OR; }
+    else if (data && data.AND) { logic = 'AND'; rules = data.AND; }
+
+    if (rules.length === 0) return 'No conditions set.';
+
+    const parts = rules.map(item => {
         const field = conditionFields.find(f => f.key === item.field)?.label || item.field;
         const opLabels = {
             '=': 'is',
@@ -197,7 +219,7 @@ function getFlatSummary(data) {
         const option_label = options_json.find(k => k.value + "" === item.value + "")?.label || item.value;
         return `[${field}] ${opLabels[item.operator] || item.operator} "${option_label}"`;
     });
-    return parts.join(' AND ');
+    return parts.join(` ${logic} `);
 }
 
 function updateSummaryPreview() { }
@@ -950,11 +972,17 @@ function openConditionBuilder() {
     }
 
     try {
-        currentConditionData = JSON.parse(document.getElementById('prop_condition').value || '{"AND": []}');
+        const parsed = JSON.parse(document.getElementById('prop_condition').value || '{"AND": []}');
+        if (parsed.OR) {
+            currentConditionLogic = 'OR';
+            currentConditionRules = parsed.OR;
+        } else {
+            currentConditionLogic = 'AND';
+            currentConditionRules = parsed.AND || [];
+        }
     } catch (e) {
-        currentConditionData = {
-            AND: []
-        };
+        currentConditionLogic = 'AND';
+        currentConditionRules = [];
     }
 
     renderConditionBuilder();
@@ -963,8 +991,10 @@ function openConditionBuilder() {
 }
 
 function saveConditionFromBuilder() {
-    document.getElementById('prop_condition').value = JSON.stringify(currentConditionData);
-    updateConditionSummary(currentConditionData);
+    const data = {};
+    data[currentConditionLogic] = currentConditionRules;
+    document.getElementById('prop_condition').value = JSON.stringify(data);
+    updateConditionSummary(data);
 
     const modalEl = document.getElementById('conditionBuilderModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
@@ -973,7 +1003,7 @@ function saveConditionFromBuilder() {
     const nodeId = document.getElementById('prop_node_id').value;
     if (nodeId) {
         lf.setProperties(nodeId, {
-            condition: currentConditionData
+            condition: data
         });
     }
 }
