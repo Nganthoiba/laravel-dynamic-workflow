@@ -2,6 +2,7 @@
 
 namespace Workflow\Http\Controllers;
 
+use Exception;
 use Workflow\Models\Process;
 use Workflow\Models\Step;
 use Workflow\Models\StepTransition;
@@ -235,7 +236,7 @@ class WorkflowDesignerController extends Controller
         // Rule 1: Exactly one start step
         $startStepsCount = Step::where('process_id', $processId)->where('is_start', true)->count();
         if ($startStepsCount !== 1) {
-            throw new \Exception("The workflow must have exactly one start step. Current count: {$startStepsCount}");
+            throw new Exception("The workflow must have exactly one start step. Current count: {$startStepsCount}");
         }
 
         // Rule 2: At most one default transition per step
@@ -247,7 +248,7 @@ class WorkflowDesignerController extends Controller
             ->get();
 
         if ($stepsWithMultipleDefaults->isNotEmpty()) {
-            throw new \Exception("A step cannot have more than one default transition.");
+            throw new Exception("A step cannot have more than one default transition.");
         }
 
         // Rule 3: Conditional nodes must have at least one condition logic item
@@ -257,8 +258,15 @@ class WorkflowDesignerController extends Controller
             if (is_string($condition)) {
                 $condition = json_decode($condition, true);
             }
-            if (empty($condition) || !is_array($condition) || empty($condition['AND']) || !is_array($condition['AND']) || count($condition['AND']) === 0) {
-                throw new \Exception("Validation Error: Condition node \"{$step->name}\" must have at least one condition logic defined.");
+            if (empty($condition) || !is_array($condition)) {
+                throw new Exception("Validation Error: Condition node \"{$step->name}\" must have at least one condition logic defined.");
+            }
+
+            $hasAnd = isset($condition['AND']) && is_array($condition['AND']) && count($condition['AND']) > 0;
+            $hasOr = isset($condition['OR']) && is_array($condition['OR']) && count($condition['OR']) > 0;
+
+            if (!$hasAnd && !$hasOr) {
+                throw new Exception("Validation Error: Condition node \"{$step->name}\" must have at least one condition logic defined.");
             }
         }
     }
