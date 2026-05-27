@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('code')
                 ->comment('Machine-readable step identifier used in workflow engine');
 
-            $table->unique(['code', 'deleted_at']);
+            $table->unique(['process_id', 'code', 'deleted_at']);
 
             $table->text('description')
                 ->nullable()

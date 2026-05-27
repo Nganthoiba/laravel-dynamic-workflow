@@ -149,7 +149,7 @@ class WorkflowDesignerController extends Controller
                         'ui_json' => $node['ui_json'] ?? null,
                     ];
 
-                    $step = Step::updateOrCreate(['id' => $stepId], $stepData);
+                    $step = Step::updateOrCreate(['id' => $stepId, 'process_id' => $processId], $stepData);
                     $presentStepIds[] = $step->id;
 
                     // Sync Roles
@@ -215,7 +215,10 @@ class WorkflowDesignerController extends Controller
         } catch (\Exception $e) {
             return Response::json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'line_no' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
             ], 422);
         }
     }

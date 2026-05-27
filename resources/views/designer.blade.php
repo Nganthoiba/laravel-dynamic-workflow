@@ -35,6 +35,16 @@
                 </button>                
             </div>
             
+            <div class="btn-group shadow-sm" role="group" aria-label="JSON operations">
+                <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="exportWorkflowAsJSON()" title="Export as JSON">
+                    <i class="bi bi-download me-1"></i> Export JSON
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="importWorkflowFromJSON()" title="Import from JSON">
+                    <i class="bi bi-upload me-1"></i> Import JSON
+                </button>
+                <input type="file" id="import_workflow_file" accept=".json" style="display: none;" onchange="handleWorkflowFileImport(event)">
+            </div>
+            
             <button class="btn btn-primary btn-designer btn-sm shadow-sm" onclick="saveWorkflow()">
                 <i class="bi bi-cloud-check me-1"></i> Save Workflow
             </button>
