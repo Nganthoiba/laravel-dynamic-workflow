@@ -685,25 +685,25 @@ $service->proceed($instance, $context);
 
 ### Automatic Binding Mode
 
-The package also supports dynamic, database-driven automatic workflow triggers bound to Eloquent model events. When configured, workflows start automatically when the model fires events (such as `created`, `updated`, `saved`) without needing to write per-process manual code.
+The package supports dynamic, database-driven automatic workflow triggers bound to Eloquent model events. Workflows start automatically when a model fires events (such as `created`, `updated`, `saved`) if a matching binding exists in the `workflow_bindings` table.
 
-#### 1. Database Configuration (`workflow_bindings` table)
+#### 1. Zero-Config (Global Listener)
 
-Database bindings are registered in the `workflow_bindings` table:
+By default, the package listens to the `created` event for **all** Eloquent models globally. If you register a binding in the UI (`/workflow-bindings`), the engine will automatically detect the event and start the workflow.
 
-- `process_id`: The workflow process (`processes.id`) to execute.
-- `model_type`: Fully-qualified class name of the target Eloquent model (e.g. `App\Models\PurchaseOrder`).
-- `event_name`: The model event that fires the trigger (e.g. `created`, `updated`).
-- `priority`: Conflict resolution priority. If multiple bindings match the model event, the highest priority is resolved first.
-- `is_active`: Controls whether this binding is enabled.
+**No changes are required to your Model classes.**
 
-#### 2. Model Event Integration
+#### 2. Advanced Integration (Optional)
 
-To listen to model events automatically, you can use the **Trait-based** approach or the **Observer-based** approach:
+While the global listener handles most cases, you can use the **Trait-based** approach for more granular control:
 
-##### A. Trait-Based Approach
+##### Trait-Based Approach (Workflowable)
 
-Add the `Workflow\Traits\Workflowable` trait to your Eloquent model:
+Add the `Workflow\Traits\Workflowable` trait to your Eloquent model if you need to:
+
+- Manually trigger workflows using `$model->triggerWorkflow('event')`.
+- Customize which events to listen to on a per-model basis.
+- Execute logic when models are not yet fully persisted (using `creating`, `updating` events).
 
 ```php
 namespace App\Models;

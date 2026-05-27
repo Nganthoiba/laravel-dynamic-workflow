@@ -3,6 +3,8 @@
 namespace Workflow\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Workflow\Listeners\WorkflowModelEventListener;
+use Illuminate\Support\Facades\Event;
 
 use function config_path;
 use function resource_path;
@@ -94,7 +96,7 @@ class WorkflowServiceProvider extends ServiceProvider
         */
         $this->publishes([
             __DIR__ . '/../../config/workflow_conditions.php'
-                => config_path('workflow_conditions.php'),
+            => config_path('workflow_conditions.php'),
         ], 'workflow-conditions-config');
 
         /*
@@ -113,7 +115,7 @@ class WorkflowServiceProvider extends ServiceProvider
         */
         $this->publishes([
             __DIR__ . '/../../resources/views/workflow/steps'
-                => resource_path('views/workflow/steps'),
+            => resource_path('views/workflow/steps'),
         ], 'workflow-step-views');
 
         /*
@@ -142,5 +144,22 @@ class WorkflowServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../Models' => app_path('Models/Workflow'),
         ], 'workflow-models');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Global Eloquent Workflow Event Listeners
+        |--------------------------------------------------------------------------
+        |
+        | Automatically listen to model events globally
+        | so any Eloquent model can participate in
+        | automatic workflow triggering.
+        |
+        */
+        Event::listen('eloquent.created: *', [WorkflowModelEventListener::class, 'handle']);
+        // Event::listen('eloquent.updated: *', [WorkflowModelEventListener::class, 'handle']);
+        // Event::listen('eloquent.deleted: *', [WorkflowModelEventListener::class, 'handle']);
+        // Event::listen('eloquent.saved: *', [WorkflowModelEventListener::class, 'handle']);
+        // Event::listen('eloquent.restored: *', [WorkflowModelEventListener::class, 'handle']);
     }
 }
