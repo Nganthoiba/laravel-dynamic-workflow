@@ -62,7 +62,13 @@ class WorkflowInstanceService
     public function proceed(WorkflowInstance $instance, array $context = [])
     {
         DB::transaction(function () use ($instance, $context) {
-            // 1. Find the currently active/open task
+            // 1. Check for special 'REVERT' action (Send Back)
+            if (isset($context['action_result']) && $context['action_result'] === 'REVERT') {
+                $this->sendBack($instance, $context);
+                return;
+            }
+
+            // 2. Find the currently active/open task
             $openTask = WorkflowInstanceStep::where('workflow_instance_id', $instance->id)
                 ->where('step_id', $instance->current_step_id)
                 ->whereNull('completed_at')
@@ -71,22 +77,58 @@ class WorkflowInstanceService
             $currentStep = Step::findOrFail($instance->current_step_id);
             $handler = StepFactory::make($currentStep);
 
-            // 2. Execute business logic and determine next step
+            // 3. Execute business logic and determine next step
             // Note: handle() will execute the StepAction if one is configured
             $nextStepId = $handler->handle($context, $instance->reference, $openTask);
 
-            // 3. Mark current task as completed
+            // 4. Mark current task as completed
             if ($openTask) {
                 $openTask->update([
                     'completed_at' => \now(),
                     'user_id'      => Auth::id(),
                     'comment'      => $context['comment'] ?? null,
-                    'action'       => $context['action_result']??$currentStep->workflow_action,
+                    'action'       => $context['action_result'] ?? $currentStep->workflow_action,
                 ]);
             }
 
-            // 4. Move to next logical step (handling conditions automatically)
+            // 5. Move to next logical step (handling conditions automatically)
             $this->moveToStep($instance, $nextStepId, $context);
+        });
+    }
+
+    /**
+     * Reverses the workflow to the immediately preceding human step.
+     */
+    public function sendBack(WorkflowInstance $instance, array $context = [])
+    {
+        DB::transaction(function () use ($instance, $context) {
+            // 1. Find the most recent completed HUMAN step that is not the current one
+            $previousLog = WorkflowInstanceStep::where('workflow_instance_id', $instance->id)
+                ->whereNotNull('completed_at')
+                ->where('step_id', '!=', $instance->current_step_id)
+                ->whereHas('step', function ($query) {
+                    $query->where('node_type', 'step');
+                })
+                ->orderBy('completed_at', 'desc')
+                ->first();
+
+            if (!$previousLog) {
+                throw new Exception("Unable to send back: No previous human step found in history.");
+            }
+
+            // 2. Mark the current active task as SENT_BACK
+            WorkflowInstanceStep::where('workflow_instance_id', $instance->id)
+                ->where('step_id', $instance->current_step_id)
+                ->whereNull('completed_at')
+                ->update([
+                    'completed_at' => \now(),
+                    'user_id'      => Auth::id(),
+                    'comment'      => $context['comment'] ?? 'Sent back for correction.',
+                    'action'       => 'SENT_BACK',
+                ]);
+
+            // 3. Re-open the previous step
+            $this->moveToStep($instance, $previousLog->step_id, $context);
         });
     }
 

@@ -775,7 +775,31 @@ Steps support role-based execution. Only authorized users with matching roles ca
 
 ## Workflow Cancellation
 
-Supports runtime cancellation with status tracking (`running`, `completed`, `cancelled`, `rejected`), closed tasks, and audit traces with reasons.
+Supports runtime cancellation with status tracking (`running`, `completed`, `cancelled`, `rejected`), closed tasks, and audit trails with reasons.
+
+## Send Back (Automatic Reverse)
+
+The package supports an automatic "Send Back" feature that allows a higher authority to return a task to the immediately preceding human performer for review or modification. This does **not** require drawing explicit backward arrows in the visual designer.
+
+### How to use Send Back
+
+To enable "Send Back" in any of your step action Blade views, simply add a button with `name="action_result"` and `value="REVERT"`:
+
+```blade
+<button type="submit" name="action_result" value="REVERT" class="btn btn-warning">
+    Send Back for Correction
+</button>
+```
+
+When this button is clicked:
+
+1. The engine automatically scans the execution history of the workflow instance.
+2. It identifies the most recent completed step performed by a human.
+3. It closes the current task and creates a new pending task for that previous step.
+4. The audit trail records the action as `SENT_BACK`.
+
+> [!NOTE]
+> If you are on the very first step of a workflow, the "Send Back" button will not work as there is no previous step to return to.
 
 ## Custom Node Handlers
 
