@@ -286,6 +286,81 @@ Or you can publish specific resources using tags:
 - `workflow-step-views`: Runtime action views (e.g., Approve and Forward)
 - `workflow-assets`: JS and CSS assets
 
+### Roles Table Requirements
+
+The workflow engine requires a `roles` table to manage authorization. By default, the package includes a migration that ensures this table exists with the following fields:
+
+- `role_name` (string, unique): Machine-readable identifier.
+- `display_name` (string): Human-readable name.
+- `role_description` (text, nullable): Optional description.
+
+If you already have a `roles` table in your application, the provided migration will automatically detect and add any missing fields.
+
+### Database Schema
+
+The package uses several tables to store workflow definitions and runtime execution data.
+
+#### 1. `processes`
+
+Stores the high-level workflow definitions.
+
+- `name`: Human-readable name (e.g., "Purchase Order Approval").
+- `code`: Unique machine-readable identifier (e.g., "PO_APPROVAL").
+- `graph_json`: Complete visual graph state from the designer.
+- `canvas_state`: UI state of the designer canvas (zoom, offsets).
+
+#### 2. `steps`
+
+Stores individual nodes within a workflow.
+
+- `id`: Primary key (String/UUID from the visual designer).
+- `process_id`: Reference to the parent process.
+- `node_type`: `start`, `end`, `step`, or `condition`.
+- `name`: Label displayed in the UI.
+- `code`: Machine-readable identifier for the step.
+- `condition_json`: Logical rules for condition nodes, i.e if node_type == "condition", then this field will be used to evaluate the condition.
+- `workflow_action`: Registered action hook for step execution.
+- `is_start`, `is_end`: Flags for entry and exit points.
+
+#### 3. `step_transitions`
+
+Stores the directed edges between steps.
+
+- `id`: Primary key (UUID from the visual designer).
+- `from_step_id`, `to_step_id`: Source and destination steps.
+- `branch_type`: `TRUE`, `FALSE`, or `DEFAULT`.
+- `action_label`: Text displayed on the transition line.
+- `is_default`: Fallback flag for conditional branching.
+
+#### 4. `workflow_instances`
+
+Tracks the lifecycle of an active workflow execution.
+
+- `process_id`: Associated workflow definition.
+- `reference_type`, `reference_id`: Polymorphic link to the business model (e.g., "App\Models\Order").
+- `current_step_id`: The next pending executable step.
+- `status`: Current state (`IN_PROGRESS`, `COMPLETED`, `CANCELLED`, `REJECTED`).
+- `context`: Runtime JSON payload for conditions and actions.
+
+#### 5. `workflow_instance_steps`
+
+The audit trail of all executed tasks.
+
+- `workflow_instance_id`: Parent execution instance.
+- `step_id`: The step that was performed.
+- `user_id`: The user who executed the task.
+- `action`: The specific action taken (e.g., "approve", "reject").
+- `comment`: Optional user remarks.
+- `entered_at`, `completed_at`: Timestamps for task duration tracking.
+
+#### 6. `workflow_bindings`
+
+Maps Eloquent events to automatic workflow triggers.
+
+- `process_id`: Workflow to launch.
+- `model_type`, `event_name`: Trigger combination (e.g., "App\Models\Order" + "created").
+- `priority`: Execution order if multiple bindings match.
+
 ### Run Migrations
 
 ```bash
@@ -484,6 +559,7 @@ The package provides a complete administrative UI to define workflow metadata an
 Navigate to `/workflow/processes` to access the **Workflow Management Dashboard**. Here, all processes are listed with their metadata, unique codes, active/inactive statuses, and shortcuts to edit properties or launch the visual canvas.
 
 #### Creating a New Process
+
 1. Click **Create New Process** to open the creation form (`/workflow/processes/create`).
 2. **Process Name**: A descriptive name for the process (e.g., `Purchase Order Approval`).
 3. **Machine Code**: A unique uppercase identifier (e.g. `PURCHASE_ORDER_APPROVAL`) used programmatically to launch workflows. The form automatically converts the name to a clean snake-case slug in real-time, but you can manually override it.
@@ -499,23 +575,25 @@ Click the blue **Designer** button beside any process in the list to open the vi
 The canvas is powered by an interactive **LogicFlow** engine that enables full graph layout customization.
 
 #### 🧰 Toolbox (Left Sidebar Node Types)
+
 Drag and drop any of the four standard shapes from the left sidebar toolbox onto the canvas:
 
-*   🟢 **Start Node** (Green Ellipse): Marks the entry point of the workflow pipeline. Every process must have exactly one.
-*   🔵 **Step Node** (Blue Split-Block Rectangle): Represents an executable task. 
-    *   **Header**: Displays the Step Name (up to 40 characters).
-    *   **Body**: Dynamically displays the list of **Assigned Roles** (up to 45 characters).
-*   🟡 **Condition Node** (Yellow Diamond): Performs logical evaluation to branch routing paths dynamically.
-*   🔴 **End Node** (Red Ellipse): Marks a final termination point of the workflow process.
+- 🟢 **Start Node** (Green Ellipse): Marks the entry point of the workflow pipeline. Every process must have exactly one.
+- 🔵 **Step Node** (Blue Split-Block Rectangle): Represents an executable task.
+  - **Header**: Displays the Step Name (up to 40 characters).
+  - **Body**: Dynamically displays the list of **Assigned Roles** (up to 45 characters).
+- 🟡 **Condition Node** (Yellow Diamond): Performs logical evaluation to branch routing paths dynamically.
+- 🔴 **End Node** (Red Ellipse): Marks a final termination point of the workflow process.
 
 #### 🎮 Interactive Canvas Controls
-*   **Reposition Nodes**: Click and hold a node to drag it anywhere on the grid.
-*   **Resize Nodes**: Single-click any node to select it. A blue dotted boundary will appear with 8 square drag-handles. Click and drag any handle to scale the node boundaries.
-*   **Connect Nodes (Transitions)**: Hover your mouse over any node to reveal **blue anchor circles**. Click and drag from an anchor circle to any other node to draw a directional arrow (transition edge).
-*   **Context Hover Menu**: Hovering over a node reveals a floating tooltip with quick actions:
-    *   📝 **Edit**: Opens the properties panel.
-    *   🗑️ **Delete**: Instantly removes the node or connection.
-*   **Zoom Controls**: Use the subtract (`-`), add (`+`), or aspect-ratio buttons in the header to scale the canvas viewport.
+
+- **Reposition Nodes**: Click and hold a node to drag it anywhere on the grid.
+- **Resize Nodes**: Single-click any node to select it. A blue dotted boundary will appear with 8 square drag-handles. Click and drag any handle to scale the node boundaries.
+- **Connect Nodes (Transitions)**: Hover your mouse over any node to reveal **blue anchor circles**. Click and drag from an anchor circle to any other node to draw a directional arrow (transition edge).
+- **Context Hover Menu**: Hovering over a node reveals a floating tooltip with quick actions:
+  - 📝 **Edit**: Opens the properties panel.
+  - 🗑️ **Delete**: Instantly removes the node or connection.
+- **Zoom Controls**: Use the subtract (`-`), add (`+`), or aspect-ratio buttons in the header to scale the canvas viewport.
 
 ---
 
@@ -524,21 +602,25 @@ Drag and drop any of the four standard shapes from the left sidebar toolbox onto
 Single-click any node or transition arrow to slide-open the **Properties Offcanvas Panel** from the right.
 
 #### 📝 Step Node Properties
-*   **Step Name**: The human-readable name of the step.
-*   **Machine Code**: The unique slug used to handle specific step transitions.
-*   **Description**: Description of the operational tasks expected at this step.
-*   **Workflow Action**: Select a registered workflow step hook (from `config/workflow.php`). This binds the step to a specific Blade form view and its backend `StepActionInterface` execution class.
-*   **Roles Authorization**: A checklist of role requirements. Only users carrying a checked role are authorized to view and execute this task from their Inbox.
+
+- **Step Name**: The human-readable name of the step.
+- **Machine Code**: The unique slug used to handle specific step transitions.
+- **Description**: Description of the operational tasks expected at this step.
+- **Workflow Action**: Select a registered workflow step hook (from `config/workflow.php`). This binds the step to a specific Blade form view and its backend `StepActionInterface` execution class.
+- **Roles Authorization**: A checklist of role requirements. Only users carrying a checked role are authorized to view and execute this task from their Inbox.
 
 #### 🔗 Transition Line (Edge) Properties
-*   **Action Label**: Text displayed directly on the transition line (e.g. `Approve`, `Reject`, `Submit`).
-*   **Branch Type**:
-    *   `Default`: Standard progressive path.
-    *   `True Branch` / `False Branch`: The specific branches originating from a **Condition Node**.
-*   **Default Fallback (Toggle)**: Mark as fallback transition route if other conditional paths are not matched.
+
+- **Action Label**: Text displayed directly on the transition line (e.g. `Approve`, `Reject`, `Submit`).
+- **Branch Type**:
+  - `Default`: Standard progressive path.
+  - `True Branch` / `False Branch`: The specific branches originating from a **Condition Node**.
+- **Default Fallback (Toggle)**: Mark as fallback transition route if other conditional paths are not matched.
 
 #### ⚡ Condition Node Logic Builder
+
 For **Condition Nodes**, click the **Edit Logic** button in the properties panel to open the modal-based **Condition Logic Builder**:
+
 1. Click **Add Rule** to define evaluation statements.
 2. Select a registered field key (from `config/workflow_conditions.php`).
 3. Choose a logical operator (e.g., `is exactly`, `is not`, `>`, `<`, `is one of`, `contains`).
@@ -550,6 +632,7 @@ For **Condition Nodes**, click the **Edit Logic** button in the properties panel
 ### 4. Saving Your Workflow
 
 Once your graph design is complete:
+
 1. Ensure the layout connects all nodes logically from **Start** to **End**.
 2. Click **Save Workflow** in the top-right header.
 3. This persists the graph coordinates, step parameters, and transition pathways to the database (`steps` and `step_transitions` tables), making your changes live instantly for all new instances.
@@ -561,14 +644,16 @@ Once your graph design is complete:
 Instead of hardcoding triggers in your application logic, the package provides an **Event Triggers** dashboard (`/workflow-bindings`) where administrators can visually map Eloquent model events to specific workflow processes.
 
 #### Creating a New Binding
+
 1. Navigate to `/workflow-bindings` and click **Create Binding** (or equivalent button).
 2. **Target Process**: Select the active workflow process you want to trigger (e.g., `Purchase Order Approval`).
-3. **Business Model**: Select the entity model (e.g., `Purchase Order`). *Models are populated from the `workflow_models` configuration in `config/workflow.php`.*
-4. **Trigger Event**: Select the event that should trigger the workflow (e.g., `created`, `updated`, `submitted`). *Events are populated from `workflow_events` configuration.*
+3. **Business Model**: Select the entity model (e.g., `Purchase Order`). _Models are populated from the `workflow_models` configuration in `config/workflow.php`._
+4. **Trigger Event**: Select the event that should trigger the workflow (e.g., `created`, `updated`, `submitted`). _Events are populated from `workflow_events` configuration._
 5. **Priority Level**: Assign a numerical priority. If multiple active bindings match the same model and event, the engine will execute the one with the highest priority first.
 6. **Status**: Toggle whether the binding is active.
 
 #### Managing Existing Bindings
+
 - **Toggle Status**: Use the quick toggle button on the list to activate or deactivate triggers instantly.
 - **Edit/Delete**: Update binding rules or remove obsolete triggers without touching the application code.
 
@@ -614,6 +699,7 @@ Database bindings are registered in the `workflow_bindings` table:
 To listen to model events automatically, you can use the **Trait-based** approach or the **Observer-based** approach:
 
 ##### A. Trait-Based Approach
+
 Add the `Workflow\Traits\Workflowable` trait to your Eloquent model:
 
 ```php
@@ -638,6 +724,7 @@ public static function workflowEvents(): array
 ```
 
 ##### B. Observer-Based Approach
+
 Alternatively, you can register the package's reusable observer `Workflow\Observers\WorkflowObserver` in your application's Service Provider:
 
 ```php
