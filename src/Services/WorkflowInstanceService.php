@@ -63,7 +63,7 @@ class WorkflowInstanceService
     {
         DB::transaction(function () use ($instance, $context) {
             // 1. Check for special 'REVERT' action (Send Back)
-            if (isset($context['action_result']) && $context['action_result'] === 'REVERT') {
+            if (isset($context['action_result']) && strtoupper($context['action_result']) === 'REVERT') {
                 $this->sendBack($instance, $context);
                 return;
             }

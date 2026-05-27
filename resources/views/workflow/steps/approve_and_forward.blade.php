@@ -5,6 +5,9 @@
     <button type="submit" name="action_result" value="rejected" class="btn btn-outline-danger px-4">
         <i class="bi bi-x-circle me-1"></i> Reject
     </button>
+    <button type="submit" name="action_result" value="REVERT" class="btn btn-outline-warning px-4">
+        <i class="bi bi-x-circle me-1"></i> Revert
+    </button>
     <button type="submit" name="action_result" value="approved" class="btn btn-primary px-5">
         <i class="bi bi-check2-circle me-1"></i> Approve & Forward
     </button>

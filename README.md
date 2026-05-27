@@ -484,6 +484,9 @@ class ApproveOrderAction implements StepActionInterface
     <button type="submit" name="action_result" value="rejected" class="btn btn-outline-danger">
         Reject
     </button>
+    <button type="submit" name="action_result" value="REVERT" class="btn btn-outline-warning px-4">
+        <i class="bi bi-x-circle me-1"></i> Revert
+    </button>
     <button type="submit" name="action_result" value="approved" class="btn btn-primary">
         Approve & Forward
     </button>
