@@ -43,6 +43,20 @@ php artisan vendor:publish --provider="Workflow\Providers\WorkflowServiceProvide
 php artisan migrate
 ```
 
+#### Selective Publishing (Tags)
+
+If you only want to publish specific parts of the package, use the `--tag` flag:
+
+| Tag                          | Description                                                  |
+| :--------------------------- | :----------------------------------------------------------- |
+| `workflow-config`            | Main configuration file (`workflow.php`).                    |
+| `workflow-conditions-config` | Logical branching fields (`workflow_conditions.php`).        |
+| `workflow-views`             | All management UI views (Inbox, Designer, etc.).             |
+| `workflow-step-views`        | Runtime action views for workflow steps.                     |
+| `workflow-assets`            | Required JS/CSS for the designer.                            |
+| `workflow-migrations`        | Database schema files.                                       |
+| `workflow-models`            | Core models (optionally published to `app/Models/Workflow`). |
+
 ### 2. Register Your Models
 
 Define which models can trigger workflows in `config/workflow.php`:
