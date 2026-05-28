@@ -40,11 +40,6 @@ return [
     */
     'workflow_events' => [
         'created'   => 'Created',
-        'updated'   => 'Updated',
-        'submitted' => 'Submitted',
-        'approved'  => 'Approved',
-        'rejected'  => 'Rejected',
-        'cancelled' => 'Cancelled',
     ],
 
     'workflow_actions' => [
@@ -126,7 +121,6 @@ return [
     // Default model events that trigger workflows when using the Workflowable trait
     'trigger_events' => [
         'created',
-        'updated',
     ],
 
     /*

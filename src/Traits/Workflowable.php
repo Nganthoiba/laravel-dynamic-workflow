@@ -40,7 +40,7 @@ trait Workflowable
     {
         $events = method_exists(static::class, 'workflowEvents')
             ? static::workflowEvents()
-            : config('workflow.trigger_events', ['created', 'updated']);
+            : config('workflow.trigger_events', ['created']);
 
         foreach ($events as $event) {
             static::registerModelEvent($event, function (Model $model) use ($event) {
@@ -48,7 +48,7 @@ trait Workflowable
                 if (!$model->exists && !in_array($event, ['creating', 'created'])) {
                     return;
                 }
-                
+
                 app(WorkflowTriggerService::class)->trigger($model, $event);
             });
         }

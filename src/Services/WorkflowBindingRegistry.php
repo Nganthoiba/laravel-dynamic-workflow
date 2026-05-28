@@ -46,11 +46,6 @@ class WorkflowBindingRegistry
     {
         return config('workflow.workflow_events', [
             'created'   => 'Created',
-            'updated'   => 'Updated',
-            // 'submitted' => 'Submitted',
-            // 'approved'  => 'Approved',
-            // 'rejected'  => 'Rejected',
-            // 'cancelled' => 'Cancelled',
         ]);
     }
 
