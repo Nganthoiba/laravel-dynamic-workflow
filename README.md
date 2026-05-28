@@ -16,6 +16,21 @@ This package enables you to design complex business processes visually and execu
 
 ---
 
+## ⚡ Why Dynamic Workflows?
+
+In real-world enterprise systems, business rules are rarely fixed. Organizational policies evolve, approval authorities change, and routing rules become more complex over time.
+
+For example, a **Purchase Order** process might evolve from a simple `Employee → Manager` flow to a multi-stage `Employee → Assistant Manager → Manager → Finance Director → Admin` chain. Traditional hardcoded systems require code changes and redeployments for every such evolution.
+
+This package enables administrators to:
+
+- **Insert/Remove** intermediate approval steps.
+- **Modify** routing conditions dynamically.
+- **Redesign** approval hierarchies visually.
+- **Adapt** processes without touching the application source code.
+
+---
+
 ## 🚀 Quick Start
 
 Get a workflow up and running in minutes.
@@ -83,6 +98,28 @@ Define the fields available for logical branching in the designer.
 | `label` | `string` | The human-readable name shown in the designer.        |
 | `type`  | `string` | `number`, `string`, `date`, or `enum`.                |
 
+#### Field Schema Details
+
+| Property         | Required | Description                                                              |
+| :--------------- | :------- | :----------------------------------------------------------------------- |
+| `operators_json` | **Yes**  | List of allowed operators (e.g., `=`, `!=`, `>`, `<`, `in`, `contains`). |
+| `options_json`   | Optional | Required if type is `enum`. Array of `{value, label}` objects.           |
+
+#### Example: Adding a Department Condition
+
+```php
+[
+    'key' => 'department',
+    'label' => 'Department',
+    'type' => 'enum',
+    'operators_json' => ['=', '!='],
+    'options_json' => [
+        ['value' => 'sales', 'label' => 'Sales Dept'],
+        ['value' => 'hr', 'label' => 'Human Resources'],
+    ],
+],
+```
+
 > [!IMPORTANT]
 > **Data Sources**: Logic can evaluate both **Database Attributes** (like `order_amount`) and **Form Inputs** (like `action_result`). The `action_result` parameter is specifically used to record user decisions.
 
@@ -104,6 +141,16 @@ The workflow engine operates on a **Graph-Based Architecture**.
 1. **Instances (`workflow_instances`)**: Tracks the current active step and overall status (IN_PROGRESS, COMPLETED, etc.).
 2. **History (`workflow_instance_steps`)**: A full audit trail of every performed task, including who did it and when.
 
+### 🧠 Condition Intelligence
+
+The engine supports intelligent runtime routing using **Condition Nodes**. These nodes evaluate logic based on two primary data sources:
+
+- **Blade Views (Form Inputs)**: Data passed from the task form (e.g., `<button name="action_result" value="approved">`).
+- **Model Attributes (Database)**: Fields directly from the associated Eloquent model (e.g., `total_amount`).
+
+> [!TIP]
+> **Why `action_result` Matters**: Even if not used in a condition, passing `action_result` (e.g., `approve`, `reject`, `revert`) ensures that the precise decision is recorded in the task history audit trail.
+
 ---
 
 ## 🎨 Visual Designer
@@ -117,6 +164,19 @@ Click **Designer** on any process to launch the canvas.
 - **Drag & Drop**: Pull nodes from the sidebar onto the grid.
 - **Connect**: Drag from the blue anchor points to create transitions.
 - **Configure**: Click any node to open the properties panel (set names, actions, or roles).
+
+### 🧰 Designer Toolbox
+
+- 🟢 **Start Node**: Entry point of the workflow process.
+- 🔵 **Step Node**: Executable business task assigned to roles.
+- 🟡 **Condition Node**: Performs logical evaluation for branching.
+- 🔴 **End Node**: Termination point.
+
+### 🎮 Canvas Controls
+
+- **Resize Nodes**: Select a node and use the handles to scale its boundaries.
+- **Context Menu**: Hover over a node to reveal **Edit** and **Delete** shortcuts.
+- **Zoom & Pan**: Use the header controls to scale the viewport.
 
 ### 2. Event Triggers (UI Binding)
 
@@ -246,12 +306,12 @@ Every task form **must** extend the package's layout. Data passed from these fie
 
 The package uses several tables to store definitions and execution data:
 
-- `processes`: Workflow definitions and graph JSON.
-- `steps`: Individual nodes and logical rules.
-- `step_transitions`: Directed edges between steps.
-- `workflow_instances`: Lifecycle of an active execution.
-- `workflow_instance_steps`: Full audit trail of executed tasks.
-- `workflow_bindings`: Mapping of Eloquent events (defaults to `created`) to workflows.
+- `processes`: Stores high-level definitions (name, unique code, and the LogicFlow graph JSON).
+- `steps`: Individual nodes within a workflow (start, end, task steps, and condition gates).
+- `step_transitions`: The directed edges (arrows) connecting steps, including logical branch types (True/False).
+- `workflow_instances`: Tracks the lifecycle of an active execution and its polymorphic link to a business model.
+- `workflow_instance_steps`: The full audit trail of executed tasks, actions taken, and user comments.
+- `workflow_bindings`: Mapping of Eloquent events to automatic workflow triggers.
 
 ### Model Requirements
 
@@ -271,7 +331,25 @@ If no explicit mapping is provided, the engine falls back to a **default convent
 
 ### Advanced: Send Back (REVERT)
 
-Enable automatic backtracking by adding a button with `value="REVERT"`. The engine will return the task to the previous human performer.
+Enable automatic backtracking by adding a button with `value="REVERT"`. Unlike explicit backward arrows, the **REVERT** action is a built-in engine mechanism:
+
+1. **Scan History**: The engine scans the `workflow_instance_steps` for the most recent completed human task.
+2. **Re-open Task**: It closes the current task and creates a new pending task for that previous performer.
+3. **Audit Trail**: The action is recorded as `REVERT` in the audit logs.
+
+> [!NOTE]
+> If you are on the first step of a workflow, the "Send Back" action will be ignored as there is no previous state to return to.
+
+---
+
+### 🏛️ Separation of Concerns
+
+This package is designed to separate **Workflow Orchestration** from **Business Logic**:
+
+- **Workflow Engine**: Manages routing, authorization, state transitions, and audit trails.
+- **Application Logic**: Defines the business models, task views (Blade), and executable actions (Hooks).
+
+This separation allows your business processes to evolve and scale without cluttering your core application code with complex state machine logic.
 
 ## 🚀 Future Roadmap
 
