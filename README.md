@@ -159,29 +159,84 @@ $service->proceed($instance, $request->all());
 
 ---
 
-## Workflow Actions (Hooks)
+## ⚡ Workflow Actions (Hooks)
 
-Workflow actions define executable business behavior. Each step references a `workflow_action` hook.
+Workflow actions define executable business behavior. Each step in the visual designer references a `workflow_action` hook which determines the Blade form view and its backend execution class.
 
-### 1. Create the Action Class
+### 1. Registering Actions
 
-Implement `Workflow\Core\Contracts\StepActionInterface`:
+Define your actions in `config/workflow.php`. The `view` refers to the Blade file used for the task form, and `action` refers to the class that handles the submitted data.
+
+```php
+'workflow_actions' => [
+    // Custom business actions
+    'initiate_purchase_order' => [
+        'label' => 'Initiate Purchase Order',
+        'view' => 'initiate_purchase_order',
+        'action' => \App\Workflow\Actions\InitiatePurchaseOrderAction::class,
+    ],
+
+    // Common utility actions
+    'approve_and_forward' => [
+        'label' => 'Approve and Forward',
+        'view' => 'approve_and_forward',
+        'action' => \App\Workflow\Actions\ApproveAndForwardAction::class,
+    ],
+    'approve' => [
+        'label' => 'Approve',
+        'view' => 'approve',
+        'action' => \App\Workflow\Actions\ApproveAction::class,
+    ],
+],
+```
+
+Note: the **action** can be null if there is nothing to do at the backend.
+
+### 2. Implementation
+
+#### A. The Action Class
+
+Action classes must implement `Workflow\Core\Contracts\StepActionInterface`. The `execute` method receives the submitted form data, the target model, and the task step.
 
 ```php
 class ApproveOrderAction implements StepActionInterface {
     public function validate(array $data): array {
-        return validator($data, ['remarks' => 'nullable|string'])->validate();
+        return validator($data, [
+            'remarks' => 'nullable|string|max:500',
+            'action_result' => 'nullable|string',
+        ])->validate();
     }
 
     public function execute(array $data, Model $model, WorkflowInstanceStep $step): void {
-        $model->update(['status' => ($data['action_result'] == 'reject' ? 'rejected' : 'approved')]);
+        // Logic to update your model based on the user's decision
+        $model->update([
+            'status' => ($data['action_result'] == 'reject' ? 'rejected' : 'approved'),
+            'remark' => $data['remarks'] ?? null,
+        ]);
     }
 }
 ```
 
-### 2. Create the View
+#### B. The Blade View
 
-Blade views must extend `@extends('vendor.workflow.task_layout')`. Use `@section('form_fields')` for inputs.
+Every task form **must** extend the package's layout. Data passed from these fields will be automatically handled by the action class.
+
+```blade
+@extends('vendor.workflow.task_layout')
+
+@section('form_fields')
+    <div class="mb-3">
+        <label class="form-label">Remarks</label>
+        <textarea name="remarks" class="form-control"></textarea>
+    </div>
+@endsection
+
+@section('form_actions')
+    <button type="submit" name="action_result" value="rejected" class="btn btn-danger">Reject</button>
+    <button type="submit" name="action_result" value="REVERT" class="btn btn-warning">Revert</button>
+    <button type="submit" name="action_result" value="approved" class="btn btn-primary">Approve & Forward</button>
+@endsection
+```
 
 ---
 
@@ -204,7 +259,15 @@ Any model used in a workflow **must** have a `status` column. This is used by th
 
 ### Summary Views
 
-When a user opens a task, they see a summary of the business object. Create a view at `resources/views/workflow/reference/model_name.blade.php`.
+When a user opens a task, they see a summary of the business object (e.g., a Purchase Order). You can explicitly map models to their specific summary views in `config/workflow.php`:
+
+```php
+'reference_views' => [
+    \App\Models\PurchaseOrder::class => 'workflow.reference.purchase_order',
+],
+```
+
+If no explicit mapping is provided, the engine falls back to a **default convention** based on the model's snake_case class name (e.g., `App\Models\PurchaseOrder` looks for `resources/views/workflow/reference/purchase_order.blade.php`).
 
 ### Advanced: Send Back (REVERT)
 
@@ -212,11 +275,9 @@ Enable automatic backtracking by adding a button with `value="REVERT"`. The engi
 
 ## 🚀 Future Roadmap
 
-- [ ] Parallel workflow branches.
 - [ ] Workflow versioning & templates.
-- [ ] WebSocket-powered live task updates.
-- [ ] SLA and performance tracking.
+- [ ] Separate APIs for use in frontend like ReactJs
 
 ## 🤝 Contributing & License
 
-Contributions are welcome! This package is licensed under the **MIT License**.
+Contributions are welcome!
