@@ -27,8 +27,11 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="lf.zoom(false)" title="Zoom Out">
                     <i class="ri ri-subtract-line"></i>
                 </button>
+                <button type="button" id="btn-selection-mode" class="btn btn-outline-secondary btn-sm px-3" onclick="toggleSelectionMode()" title="Selection Mode (Define Export Area)">
+                    <i class="bi bi-bounding-box"></i>
+                </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="lf.resetZoom()" title="Reset Zoom">
-                    <i class="ri ri-aspect-ratio-line"></i>
+                    <i class="bi bi-aspect-ratio"></i>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="lf.zoom(true)" title="Zoom In">
                     <i class="ri ri-add-line"></i>
@@ -36,9 +39,15 @@
             </div>
             
             <div class="btn-group shadow-sm" role="group" aria-label="JSON operations">
-                <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="exportWorkflowAsJSON()" title="Export as JSON">
-                    <i class="bi bi-download me-1"></i> Export JSON
+                <button type="button" class="btn btn-outline-primary btn-sm px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Export Workflow">
+                    <i class="bi bi-download me-1"></i> Export
                 </button>
+                <ul class="dropdown-menu shadow-sm border-0 rounded-3">
+                    <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted">Download As</h6></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportWorkflowAsJSON()"><i class="bi bi-filetype-json me-2 text-primary"></i>JSON Format</a></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportWorkflowAsImage()"><i class="bi bi-file-earmark-image me-2 text-success"></i>Image (PNG)</a></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportWorkflowAsPDF()"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>Document (PDF)</a></li>
+                </ul>
                 <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="importWorkflowFromJSON()" title="Import from JSON">
                     <i class="bi bi-upload me-1"></i> Import JSON
                 </button>

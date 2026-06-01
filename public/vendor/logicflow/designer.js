@@ -1507,3 +1507,235 @@ function handleWorkflowFileImport(event) {
     };
     reader.readAsText(file);
 }
+/**
+ * Exports the current workflow design as a PNG image.
+ */
+async function exportWorkflowAsImage() {
+    if (!lf) return;
+    
+    try {
+        const svgElement = document.querySelector("#lf-container svg");
+        if (!svgElement) throw new Error("SVG element not found");
+
+        // Clone the SVG to manipulate it without affecting the UI
+        const clone = svgElement.cloneNode(true);
+        
+        // Remove interactive elements like handles/tooltips from the export
+        const interactiveGroups = clone.querySelectorAll('.custom-resize-group, #node-action-tooltip, .lf-control');
+        interactiveGroups.forEach(g => g.remove());
+
+        // We need to inline the CSS rules because external styles aren't captured by the Canvas
+        const styles = Array.from(document.styleSheets)
+            .filter(sheet => {
+                try { 
+                    // Only include local styles and relevant logicflow styles
+                    return sheet.href === null || sheet.href.includes('logicflow') || sheet.href.includes('bootstrap'); 
+                } catch(e) { return false; }
+            })
+            .map(sheet => {
+                try { 
+                    return Array.from(sheet.cssRules).map(rule => rule.cssText).join(''); 
+                } catch(e) { return ''; }
+            })
+            .join('');
+        
+        const styleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
+        styleElement.textContent = styles;
+        clone.insertBefore(styleElement, clone.firstChild);
+
+        // Calculate bounding box: prefers selection, falls back to whole graph
+        const bbox = getExportBBox();
+        const padding = 50;
+        const width = bbox.width + padding * 2;
+        const height = bbox.height + padding * 2;
+
+        // Configure the cloned SVG for rendering
+        clone.setAttribute("width", width);
+        clone.setAttribute("height", height);
+        clone.setAttribute("viewBox", `${bbox.x - padding} ${bbox.y - padding} ${width} ${height}`);
+        clone.setAttribute("style", "background-color: white; display: block; margin: 0 auto;");
+
+        const svgData = new XMLSerializer().serializeToString(clone);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        const img = new Image();
+        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function() {
+            // Fill background
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw the SVG image onto the canvas
+            ctx.drawImage(img, 0, 0);
+            
+            // Trigger download
+            const pngUrl = canvas.toDataURL("image/png");
+            const downloadLink = document.createElement("a");
+            const workflowName = document.querySelector("h5.fw-bold.text-primary")?.innerText || "workflow";
+            downloadLink.download = `${workflowName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`;
+            downloadLink.href = pngUrl;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Cleanup
+            URL.revokeObjectURL(url);
+        };
+        img.src = url;
+
+    } catch (e) {
+        console.error("Image Export failed:", e);
+        alert("Failed to export as image: " + e.message);
+    }
+}
+
+/**
+ * Exports the current workflow design as a PDF.
+ * Uses a high-quality print approach to ensure vector-like quality.
+ */
+function exportWorkflowAsPDF() {
+    if (!lf) return;
+
+    try {
+        const svgElement = document.querySelector("#lf-container svg");
+        if (!svgElement) throw new Error("SVG element not found");
+
+        const workflowName = document.querySelector("h5.fw-bold.text-primary")?.innerText || "Workflow Design";
+        
+        // Clone SVG and basic styling
+        const clone = svgElement.cloneNode(true);
+        const bbox = getExportBBox();
+        const padding = 20;
+        
+        const width = bbox.width + padding * 2;
+        const height = bbox.height + padding * 2;
+        
+        clone.setAttribute("viewBox", `${bbox.x - padding} ${bbox.y - padding} ${width} ${height}`);
+        clone.style.width = "auto";
+        clone.style.maxWidth = "100%";
+        clone.style.height = "auto";
+        clone.style.display = "block";
+        clone.style.margin = "0 auto";
+
+        // Create a temporary hidden iframe for printing
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+
+        const frameDoc = printFrame.contentWindow.document;
+        
+        // Build a minimal HTML for the print window
+        frameDoc.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>${workflowName}</title>
+                    <style>
+                        @page { size: auto; margin: 10mm; }
+                        body { margin: 0; padding: 20px; font-family: sans-serif; text-align: center; }
+                        .header { margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+                        h1 { color: #1e40af; margin: 0; font-size: 24px; }
+                        p { color: #64748b; margin: 5px 0 0; font-size: 14px; }
+                        .container { width: 100%; display: block; text-align: center; }
+                        svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>${workflowName}</h1>
+                        <p>Generated by Workflow Designer on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="container">
+                        ${new XMLSerializer().serializeToString(clone)}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                parent.document.body.removeChild(parent.document.querySelector('iframe[style*="width: 0"]'));
+                            }, 500);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        frameDoc.close();
+
+    } catch (e) {
+        console.error("PDF Export failed:", e);
+        alert("Failed to export as PDF: " + e.message);
+    }
+}
+
+/**
+ * Toggles the Selection Mode where users can drag a rectangle to select multiple elements.
+ * This selection defines the "outline" for selective export.
+ */
+let isSelectionMode = false;
+function toggleSelectionMode() {
+    if (!lf) return;
+    
+    isSelectionMode = !isSelectionMode;
+    const btn = document.getElementById("btn-selection-mode");
+    
+    if (isSelectionMode) {
+        btn.classList.remove("btn-outline-secondary");
+        btn.classList.add("btn-primary");
+        // Disable graph panning to allow region selection by dragging
+        lf.updateEditConfig({
+            stopMoveGraph: true,
+        });
+    } else {
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-outline-secondary");
+        // Re-enable graph panning
+        lf.updateEditConfig({
+            stopMoveGraph: false,
+        });
+    }
+}
+
+/**
+ * Calculates the bounding box for export, considering both full graph and selected elements.
+ */
+function getExportBBox() {
+    const selected = lf.getSelectElements();
+    
+    if (selected && selected.nodes && selected.nodes.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        selected.nodes.forEach(node => {
+            const model = lf.getNodeModelById(node.id);
+            const hw = (model.width || (model.rx ? model.rx * 2 : 0) || 140) / 2;
+            const hh = (model.height || (model.ry ? model.ry * 2 : 0) || 90) / 2;
+            
+            minX = Math.min(minX, model.x - hw);
+            minY = Math.min(minY, model.y - hh);
+            maxX = Math.max(maxX, model.x + hw);
+            maxY = Math.max(maxY, model.y + hh);
+        });
+
+        // Ensure edges/labels that might be slightly outside the node bounds are captured
+        const buffer = 20;
+        return {
+            x: minX - buffer,
+            y: minY - buffer,
+            width: (maxX - minX) + buffer * 2,
+            height: (maxY - minY) + buffer * 2
+        };
+    }
+    
+    // Fallback to the whole graph container
+    const container = getGraphContainer();
+    return container ? container.getBBox() : { x: 0, y: 0, width: 1000, height: 1000 };
+}
