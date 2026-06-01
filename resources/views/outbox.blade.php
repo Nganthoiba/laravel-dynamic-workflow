@@ -10,13 +10,26 @@
         <h6 class="fw-bold py-3 mb-0">
             <span class="text-muted fw-light">Workflow /</span> My Outgoing Task
         </h6>
-        <span class="badge bg-label-success fs-6">{{ $tasks->count() }} Completed Tasks</span>
+        <span class="badge bg-label-success fs-6">{{ $tasks->total() }} Completed Tasks</span>
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-            <i class="bi bi-send me-2 text-success fs-4"></i>
-            <h5 class="mb-0">Actioned by You</h5>
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-send me-2 text-success fs-4"></i>
+                <h5 class="mb-1">Actioned by You</h5>
+            </div>
+            <form action="{{ route('workflow.outbox') }}" method="GET" class="d-flex align-items-center">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="search" class="form-control" placeholder="Search tasks..." value="{{ request('search') }}">
+                    @if(request('search'))
+                        <a href="{{ route('workflow.outbox') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                    @endif
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive text-nowrap">
@@ -97,6 +110,11 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="card-footer bg-white py-3">
+                <div class="d-flex justify-content-center">
+                    {{ $tasks->appends(['search' => request('search')])->links() }}
+                </div>
             </div>
         </div>
     </div>

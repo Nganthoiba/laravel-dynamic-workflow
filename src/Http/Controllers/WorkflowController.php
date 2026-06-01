@@ -26,14 +26,16 @@ class WorkflowController extends Controller
     /**
      * Display a list of open tasks assigned to the current user's roles.
      */
-    public function inbox()
+    public function inbox(Request $request)
     {
+        $search = $request->get('search');
+
         // Assuming host application User model has a 'roles' relationship
         $userRoleIds = Auth::user()->roles?->pluck('id')->toArray() ?? [];
 
         // Find steps that the current user's roles can execute
         $authorizedStepIds = Step::where('node_type', 'step')
-            ->whereHas('roles', function($q) use ($userRoleIds) {
+            ->whereHas('roles', function ($q) use ($userRoleIds) {
                 $q->whereIn('roles.id', $userRoleIds);
             })
             ->orWhereDoesntHave('roles') // Steps with no roles are public/default
@@ -42,8 +44,22 @@ class WorkflowController extends Controller
         $tasks = WorkflowInstanceStep::with(['workflowInstance.process', 'step', 'workflowInstance.reference'])
             ->whereIn('step_id', $authorizedStepIds)
             ->whereNull('completed_at')
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->whereHas('workflowInstance.process', function ($pq) use ($search) {
+                        $pq->where('name', 'like', "%{$search}%");
+                    })
+                        ->orWhereHas('step', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('workflowInstance', function ($iq) use ($search) {
+                            $iq->where('reference_id', 'like', "%{$search}%")
+                                ->orWhere('reference_type', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->orderBy('entered_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return view('workflow::inbox', compact('tasks'));
     }
@@ -51,16 +67,32 @@ class WorkflowController extends Controller
     /**
      * Display a list of tasks completed by the current user.
      */
-    public function outbox()
+    public function outbox(Request $request)
     {
+        $search = $request->get('search');
+
         $tasks = WorkflowInstanceStep::with(['workflowInstance.process', 'step', 'workflowInstance.reference'])
             ->select('workflow_instance_steps.*')
             ->join('steps', 'steps.id', '=', 'workflow_instance_steps.step_id')
             ->where('user_id', Auth::id())
-            ->where('steps.node_type','!=','start')
+            ->where('steps.node_type', '!=', 'start')
             ->whereNotNull('completed_at')
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->whereHas('workflowInstance.process', function ($pq) use ($search) {
+                        $pq->where('name', 'like', "%{$search}%");
+                    })
+                        ->orWhereHas('step', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('workflowInstance', function ($iq) use ($search) {
+                            $iq->where('reference_id', 'like', "%{$search}%")
+                                ->orWhere('reference_type', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->orderBy('completed_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return view('workflow::outbox', compact('tasks'));
     }
@@ -71,9 +103,9 @@ class WorkflowController extends Controller
     public function showTask($id)
     {
         $task = WorkflowInstanceStep::with([
-            'workflowInstance.process', 
-            'step', 
-            'workflowInstance.steps.step.roles', 
+            'workflowInstance.process',
+            'step',
+            'workflowInstance.steps.step.roles',
             'workflowInstance.steps.user'
         ])->findOrFail($id);
         $readonly = false;
@@ -117,7 +149,7 @@ class WorkflowController extends Controller
     public function handleTask(Request $request, $id)
     {
         $task = WorkflowInstanceStep::with(['workflowInstance', 'step'])->findOrFail($id);
-        
+
         if ($task->completed_at) {
             return redirect()->route('workflow.inbox')->with('error', 'Task already completed.');
         }
@@ -147,7 +179,6 @@ class WorkflowController extends Controller
             $this->workflowService->proceed($instance, $context);
 
             return redirect()->route('workflow.inbox')->with('success', 'Task submitted successfully.');
-
         } catch (Exception $e) {
             return back()->withInput()->with('error', 'Workflow error: ' . $e->getMessage());
         }
@@ -179,7 +210,7 @@ class WorkflowController extends Controller
     public function cancel(Request $request, int $instanceId)
     {
         $instance = WorkflowInstance::findOrFail($instanceId);
-        
+
         $this->workflowService->cancel($instance, $request->get('reason'));
 
         return redirect()->route('workflow.inbox')->with('success', 'Workflow instance cancelled.');
