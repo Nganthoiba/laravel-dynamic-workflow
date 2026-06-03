@@ -68,7 +68,13 @@ class WorkflowInstanceService
                 return;
             }
 
-            // 2. Find the currently active/open task
+            // 2. Check for rejected or cancelled status in context
+            if (isset($context['action_result']) && in_array(strtolower($context['action_result']), ['rejected', 'cancelled'])) {
+                $this->cancel($instance, 'Workflow ' . $context['action_result'] . ' by user action.');
+                return;
+            }
+
+            // 3. Find the currently active/open task
             $openTask = WorkflowInstanceStep::where('workflow_instance_id', $instance->id)
                 ->where('step_id', $instance->current_step_id)
                 ->whereNull('completed_at')
@@ -77,11 +83,11 @@ class WorkflowInstanceService
             $currentStep = Step::findOrFail($instance->current_step_id);
             $handler = StepFactory::make($currentStep);
 
-            // 3. Execute business logic and determine next step
+            // 4. Execute business logic and determine next step
             // Note: handle() will execute the StepAction if one is configured
             $nextStepId = $handler->handle($context, $instance->reference, $openTask);
 
-            // 4. Mark current task as completed
+            // 5. Mark current task as completed
             if ($openTask) {
                 $openTask->update([
                     'completed_at' => \now(),
@@ -91,7 +97,7 @@ class WorkflowInstanceService
                 ]);
             }
 
-            // 5. Move to next logical step (handling conditions automatically)
+            // 6. Move to next logical step (handling conditions automatically)
             $this->moveToStep($instance, $nextStepId, $context);
         });
     }
