@@ -30,18 +30,14 @@ class ConditionNodeHandler extends NodeHandler
             ->where('branch_type', $branch)
             ->first();
 
-
-        //return $edge?->to_step_id;
         if (!$edge) {
             return null;
         }
-
         //What if the to_step_id is again another conditional node
         $nextStep = $edge->toStep;
         if ($nextStep->node_type === 'condition') {
-            return $this->process($context, $nextStep, $workflowInstanceStep);
+            return $this->findStepNode($nextStep, $context);
         }
-
         return $edge?->to_step_id;
     }
 
@@ -83,5 +79,33 @@ class ConditionNodeHandler extends NodeHandler
             'contains' => str_contains((string)$actual, (string)$value),
             default => false,
         };
+    }
+
+    // method to recursively  move down to the next conditional node until we hit a step or end node
+    public function findStepNode(Step $step /* Conditional Step */, array $context): ?string
+    {
+        if ($step->node_type !== 'condition') {
+            // Default fallback if it is not a conditional node
+            return $step->id;
+        }
+
+
+        $cond = $step->condition_json;
+
+        $flag = $this->evaluate($cond, $context) ? 'TRUE' : 'FALSE';
+
+        $edge = $step->edges()
+            ->where('branch_type', $flag)
+            ->first();
+
+        if (!$edge) {
+            return null;
+        }
+
+        $nextStep = $edge->toStep;
+        if ($nextStep->node_type === 'condition') {
+            return $this->findStepNode($nextStep, $context);
+        }
+        return $edge?->to_step_id;
     }
 }
