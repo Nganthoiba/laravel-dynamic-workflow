@@ -30,6 +30,18 @@ class ConditionNodeHandler extends NodeHandler
             ->where('branch_type', $branch)
             ->first();
 
+
+        //return $edge?->to_step_id;
+        if (!$edge) {
+            return null;
+        }
+
+        //What if the to_step_id is again another conditional node
+        $nextStep = $edge->toStep;
+        if ($nextStep->node_type === 'condition') {
+            return $this->process($context, $nextStep, $workflowInstanceStep);
+        }
+
         return $edge?->to_step_id;
     }
 
